@@ -11,7 +11,7 @@ export let name; name = ''; // including this fixes a runtime warning about miss
 
 let clockTime; // bound to clock.clockTime
 let offset; // bound to clock.offset
-let trac = {};
+let trac;
 let calc;
 
 onMount(() => tm.activeId.subscribe(() => $tage = 'SYNC'));
@@ -27,6 +27,7 @@ onMount(() => {
 //TESTING END
 
 function syncTime() {
+	trac = {};
 	trac.sysDate = new Date();
 	// Set the clock to the nearest quarter minute of the current time.
 	// start by setting the guess back 1 minute and 15 seconds.

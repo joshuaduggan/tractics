@@ -1,3 +1,3 @@
-Calc and show observation
+Figure out if I can remove activeId - set it to a local in WatchSelect
 
 ? profit

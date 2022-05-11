@@ -1,6 +1,6 @@
 <script>
 import { onMount } from 'svelte';
-import { activeId, tage } from '../tracmanager.js';
+import { tage } from '../tracmanager.js';
 
 export let clockTime = new Date();
 export let offset = 0; // The offset from the system time in millis
@@ -16,7 +16,7 @@ onMount(() => {
 		clockTime = new Date(new Date().getTime() + offset);
 	}, 100);
 
-	activeId.subscribe(() => offset = 0);
+	tage.subscribe((v) => { if (v == 'SYNC') offset = 0; });
 
 	return () => {
 		clearInterval(interval);
