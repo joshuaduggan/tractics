@@ -1,10 +1,9 @@
 <script>
 import { onMount } from 'svelte';
-import { activeId } from '../tracmanager.js';
+import { activeId, tage } from '../tracmanager.js';
 
 export let clockTime = new Date();
 export let offset = 0; // The offset from the system time in millis
-export let showSeconds;
 
 // these automatically update when `time`
 // changes, because of the `$:` prefix
@@ -64,7 +63,7 @@ onMount(() => {
 	/>
 
 	<!-- second hand -->
-	{#if showSeconds}
+	{#if $tage != 'SYNC'}
 	<g transform='rotate({6 * seconds})'>
 		<line class='second' y1='10' y2='-38'/>
 		<line class='second-counterweight' y1='10' y2='2'/>

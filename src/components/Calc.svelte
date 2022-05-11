@@ -1,11 +1,7 @@
 <script>
-import { watches, activeId } from '../tracmanager.js';
-import { onMount } from "svelte";
+import { watches, tage } from '../tracmanager.js';
 
-let trac; // the latest trac - the one this sets
-
-// reset the trac whenever the selected watch changes.
-onMount(() => activeId.subscribe(() => trac = undefined));
+let trac; // the latest trac - the one calcAccuracy sets
 
 /**
  * 
@@ -34,7 +30,7 @@ export function calcAccuracy(t) {
 </script>
 
 <p>
-{#if trac}
+{#if $tage == 'RESULTS'}
     Your watch is now <strong>{trac.secondsOff} seconds</strong> from system time.
     {#if 'hoursSinceLastAdj' in trac}
         It was <strong>{trac.secondsOffLastAdj} seconds</strong> from system time when synced after it's latest adjustment

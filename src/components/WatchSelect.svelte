@@ -1,13 +1,6 @@
 <script>
 import * as tm from '../tracmanager.js'; // use tm prefix for clarity
 import { watches, activeId } from '../tracmanager.js'; // import watches and activeId specificaly for brevity
-//import { onMount } from "svelte";
-
-//*onMount(() => {
-//    // now that stuff's initialized call selected to load the first watch in the list
-//    $activeId = $watches[0].id;
-//    selected();
-//});*/
 
 function addWatch() {
     let susNewName = prompt("Name of the new Watch"); // get a potentially malicious name from the user

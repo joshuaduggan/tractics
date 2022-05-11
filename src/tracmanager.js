@@ -50,6 +50,9 @@ if (get(watches).length < 1) {
 export const activeId = writable(-1);
 watches.subscribe((v) => { if (get(activeId) != v[0].id) activeId.set(v[0].id); });
 
+// 'SYNC' | 'ALTER' | 'ADJUSTED' | 'RESULTS'
+export const tage = writable();
+
 /**
  * Adds a watch to the begining of the array
  * @param {String} susName The potentially malicious name for the new watch

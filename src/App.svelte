@@ -1,5 +1,6 @@
 <script>
 import * as tm from './tracmanager.js';
+import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
@@ -8,16 +9,12 @@ import { onMount } from "svelte";
 export let name; name = ''; // including this fixes a runtime warning about missing prop. This is
 							// a Svelte issue has nothing to do with this app AFAIK.
 
-let showSeconds; // bound to clock.showSeconds
 let clockTime; // bound to clock.clockTime
 let offset; // bound to clock.offset
 let trac = {};
 let calc;
-let stage;
 
-$: showSeconds = stage != 'SYNC';
-
-onMount(() => tm.activeId.subscribe(() => stage = 'SYNC'));
+onMount(() => tm.activeId.subscribe(() => $tage = 'SYNC'));
 //TESTING START
 /**stage = 'TEST'
 trac = tm.testData[0].tracs.pop(); //testdata includes the new trac which wouldn't yet be in watches
@@ -51,7 +48,7 @@ function syncTime() {
 		}
 	}
 	offset = guess.getTime() - trac.sysDate.getTime();
-	stage = 'ALTER';
+	$tage = 'ALTER';
 }
 
 function retard15() {
@@ -64,31 +61,31 @@ function advance15() {
 
 function confirmWatchIndicated() {
 	trac.watchDate = new Date(trac.sysDate.getTime() + offset);
-	stage = 'ADJUSTED';
+	$tage = 'ADJUSTED';
 }
 
 function wasWatchAdjusted(wasIt) {
 	trac.wasWatchAdj = wasIt;
 	calc.calcAccuracy(trac);
 	tm.addTrac(trac);
-	stage = 'RESULTS';
+	$tage = 'RESULTS';
 }
 </script>
 
 <WatchSelect/><br/>
-<Clock bind:showSeconds bind:offset bind:clockTime/><br/>
-{#if stage == 'SYNC'}
+<Clock bind:offset bind:clockTime/><br/>
+{#if $tage == 'SYNC'}
 <div>
 	<p>Sync when your watch reads 00, 15, 30, or 45 seconds.</p>
 	<button on:click={syncTime}>Sync Time</button>
 </div>
-{:else if stage == 'ALTER'}
+{:else if $tage == 'ALTER'}
 <div>
 	<p>Does the clock match the time on your watch? Adjust the indicated time to match your watch.</p>
 	<button on:click={retard15}>- 15</button><button on:click={advance15}>+ 15</button>
 	<button on:click={confirmWatchIndicated}>Watch is showing {clockTime.toLocaleTimeString().replace('AM', '').replace('PM', '')}</button>
 </div>
-{:else if stage == 'ADJUSTED'}
+{:else if $tage == 'ADJUSTED'}
 <div>
 	<p>Has the watch been adjusted or has it's timekeeping been otherwise interrupted since last tracked?</p>
 	<button on:click={() => wasWatchAdjusted(true)}>Yes</button>
@@ -96,8 +93,8 @@ function wasWatchAdjusted(wasIt) {
 </div>
 {/if}
 <Calc bind:this={calc}/>
-{#if stage == 'RESULTS'}
-<button on:click={() => { stage = 'SYNC'; }}>Begin another sync</button>
+{#if $tage == 'RESULTS'}
+<button on:click={() => { $tage = 'SYNC'; }}>Begin another sync</button>
 {/if}
 
 <style>
