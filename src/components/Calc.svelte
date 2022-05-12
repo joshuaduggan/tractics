@@ -2,6 +2,7 @@
 import { watches, tage } from '../tracmanager.js';
 
 let trac; // the latest trac - the one calcAccuracy sets
+let adjTrac;
 
 /**
  * 
@@ -13,6 +14,7 @@ export function calcAccuracy(t) {
     let millisSinceLastAdj = 0;
     let millisOffAfterLastAdj;
     for (let i = ts.length - 1; i >= 0; i--) {
+        adjTrac = ts[i];
         millisSinceLastAdj = t.sysDate.getTime() - ts[i].sysDate.getTime();
         millisOffAfterLastAdj = ts[i].watchDate.getTime() - ts[i].sysDate.getTime();
         if (ts[i].wasWatchAdj) break;
@@ -41,3 +43,42 @@ export function calcAccuracy(t) {
     {/if}
 {/if}
 </p>
+
+{#if $tage == 'RESULTS' && 'hoursSinceLastAdj' in trac}
+    <table>
+        <tr><th colspan=5 align="center">Since Latest Adjustment</th></tr>
+        <tr>
+            <th></th>
+            <th>System</th>
+            <th>Watch</th>
+            <th>Diff</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>{Math.round((trac.sysDate.getTime() - adjTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10} days ago:</td>
+            <td>{adjTrac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{adjTrac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{adjTrac.secondsOff}</td>
+            <td rowspan=2 class='spdres'>{trac.spdOffSinceLastAdj} spd</td>
+        </tr>
+        <tr>
+            <td>Now:</td>
+            <td>{trac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{trac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{trac.secondsOff}</td>
+        </tr>
+    </table>
+{/if}
+
+<style>
+table td + td, table th + th { border-left:1px solid; }
+table, th, td {
+/*     border: 1px solid;*/
+    border-collapse: collapse;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+.spdres {
+    background-color: yellow;
+}
+</style>

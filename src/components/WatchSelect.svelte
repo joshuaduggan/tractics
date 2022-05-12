@@ -1,11 +1,23 @@
 <script>
+import { onMount } from "svelte";
 import * as tm from '../tracmanager.js'; // use tm prefix for clarity
-import { watches, activeId } from '../tracmanager.js'; // import watches and activeId specificaly for brevity
+import { watches } from '../tracmanager.js'; // import watches specificaly for brevity
+
+let selectedId = 0;
+
+onMount(() => {
+    watches.subscribe((ws) => {
+        if (selectedId != ws[0].id) {
+            selectedId = ws[0].id;
+            tm.tage.set('SYNC');
+        }
+    });
+    selectedId = $watches[0].id;
+});
 
 function addWatch() {
     let susNewName = prompt("Name of the new Watch"); // get a potentially malicious name from the user
     if (!isNewWatchNameOk(susNewName)) {
-        $activeId = $watches[0].id; // reset select ele to first watch in list
         return;
     }
     tm.addWatch(susNewName);
@@ -17,23 +29,19 @@ function renameWatch() {
     let susNewName = prompt('Enter new name for ' + escapeForHTML($watches[0].susName));
     if (!isNewWatchNameOk(susNewName)) return;
     $watches[0].susName = susNewName;
-    $activeId = $watches[0].id;
 }
 
 function deleteWatch() {
     if ($watches.length <= 1) {
         alert('You must have at least one Watch, create a new Watch to delete ' +
             escapeForHTML($watches[0].susName));
-        $activeId = $watches[0].id;
         return;
     }
     if (!confirm('Are you sure you want to permanently delete ' +
             escapeForHTML($watches[0].susName) + ' and all it\'s records?')) {
-        $activeId = $watches[0].id;
         return;
     }
     tm.deleteWatch();
-    $activeId = $watches[0].id;
 }
 
 function isNewWatchNameOk(susNewName) {
@@ -50,22 +58,26 @@ function isNewWatchNameOk(susNewName) {
  * selected list
  */
 function selected() {
-    // code to deal with non-watch stuff
-    switch ($activeId) {
-        case undefined:// needed because this gets called on load before initialized
-            return;
-        case 'ADD':
-            addWatch();
-            return;
-        case 'RENAME':
-            renameWatch();
-            return;
-        case 'DELETE':
-            deleteWatch();
-            return;
+    if (Number.parseInt(selectedId)) {
+        // move the selected watch to the front of the array
+        tm.moveWatch(selectedId);
+    } else {
+        // code to deal with non-watch stuff
+        switch (selectedId) {
+            case 'ADD':
+                addWatch();
+                break;
+            case 'RENAME':
+                renameWatch();
+                break;
+            case 'DELETE':
+                deleteWatch();
+                break;
+            case undefined:// needed because this gets called on load before initialized
+                return;
+        }
     }
-    // move the selected watch to the front of the array
-    tm.moveWatch($activeId);
+    selectedId = $watches[0].id;
 }
 
 function escapeForHTML(str) {
@@ -75,7 +87,7 @@ function escapeForHTML(str) {
 }
 </script>
 
-<select bind:value={$activeId} on:change={selected}>
+<select bind:value={selectedId} on:change={selected}>
 {#each $watches as watch}
     <option value={watch.id}>{escapeForHTML(watch.susName)}</option>
 {/each}

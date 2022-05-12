@@ -4,7 +4,7 @@ import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
-import { onMount } from "svelte";
+import ResChart from './components/ResChart.svelte';
 
 export let name; name = ''; // including this fixes a runtime warning about missing prop. This is
 							// a Svelte issue has nothing to do with this app AFAIK.
@@ -14,7 +14,6 @@ let offset; // bound to clock.offset
 let trac;
 let calc;
 
-onMount(() => tm.activeId.subscribe(() => $tage = 'SYNC'));
 //TESTING START
 /**stage = 'TEST'
 trac = tm.testData[0].tracs.pop(); //testdata includes the new trac which wouldn't yet be in watches

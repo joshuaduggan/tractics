@@ -1,3 +1,5 @@
-Figure out if I can remove activeId - set it to a local in WatchSelect
+Concisely standardize output into chart
 
-? profit
+
+?
+Profit

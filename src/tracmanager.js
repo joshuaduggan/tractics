@@ -47,8 +47,8 @@ if (get(watches).length < 1) {
 
 // store which will update whenever the watches first element id changes - whereas watches will
 // update whenever anything changes in it's data structure.
-export const activeId = writable(-1);
-watches.subscribe((v) => { if (get(activeId) != v[0].id) activeId.set(v[0].id); });
+//export const activeId = writable(-1);
+//watches.subscribe((v) => { if (get(activeId) != v[0].id) activeId.set(v[0].id); });
 
 // 'SYNC' | 'ALTER' | 'ADJUSTED' | 'RESULTS'
 export const tage = writable();
