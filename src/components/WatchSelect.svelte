@@ -26,7 +26,7 @@ function addWatch() {
 
 function renameWatch() {
     // get a potentially malicious name from the user
-    let susNewName = prompt('Enter new name for ' + escapeForHTML($watches[0].susName));
+    let susNewName = prompt('Enter new name for ' + tm.escapeForHTML($watches[0].susName));
     if (!isNewWatchNameOk(susNewName)) return;
     $watches[0].susName = susNewName;
 }
@@ -34,11 +34,11 @@ function renameWatch() {
 function deleteWatch() {
     if ($watches.length <= 1) {
         alert('You must have at least one Watch, create a new Watch to delete ' +
-            escapeForHTML($watches[0].susName));
+            tm.escapeForHTML($watches[0].susName));
         return;
     }
     if (!confirm('Are you sure you want to permanently delete ' +
-            escapeForHTML($watches[0].susName) + ' and all it\'s records?')) {
+            tm.escapeForHTML($watches[0].susName) + ' and all it\'s records?')) {
         return;
     }
     tm.deleteWatch();
@@ -80,20 +80,20 @@ function selected() {
     selectedId = $watches[0].id;
     $tage = 'SYNC';
 }
-
-function escapeForHTML(str) {
-    return str.replace(/[&<>'"]/g, tag => ({
-            '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
-        }[tag] || tag));
-}
 </script>
 
 <select bind:value={selectedId} on:change={selected}>
 {#each $watches as watch}
-    <option value={watch.id}>{escapeForHTML(watch.susName)}</option>
+    <option value={watch.id}>{tm.escapeForHTML(watch.susName)}</option>
 {/each}
     <option value='' disabled>--------------</option>
     <option value='ADD'>Add A New Watch</option>
     <option value='RENAME'>Rename Active Watch</option>
     <option value='DELETE'>Delete Active Watch</option>
 </select>
+
+<style>
+select {
+    width: 80%;
+}
+</style>

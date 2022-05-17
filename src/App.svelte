@@ -4,7 +4,7 @@ import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
-import ResChart from './components/ResChart.svelte';
+//import ResChart from './components/ResChart.svelte';
 
 export let name; name = ''; // including this fixes a runtime warning about missing prop. This is
 							// a Svelte issue has nothing to do with this app AFAIK.
@@ -71,32 +71,45 @@ function wasWatchAdjusted(wasIt) {
 	$tage = 'RESULTS';
 }
 </script>
-
+<div align='center'>
 <WatchSelect/><br/>
-<Clock bind:offset bind:clockTime/><br/>
+<Clock bind:offset bind:clockTime/>
+</div>
 {#if $tage == 'SYNC'}
 <div>
 	<p>Sync when your watch reads 00, 15, 30, or 45 seconds.</p>
-	<button on:click={syncTime}>Sync Time</button>
+	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync Time</button></div>
 </div>
 {:else if $tage == 'ALTER'}
 <div>
-	<p>Does the clock match the time on your watch? Adjust the indicated time to match your watch.</p>
-	<button on:click={retard15}>- 15</button> <button on:click={advance15}>+ 15</button>
-	<button on:click={confirmWatchIndicated}>Continue</button>
-	<button on:click={() => { $tage = 'SYNC'; }}>Cancel</button>
+	<p>Does the clock match the time on your watch? Adjust as needed.</p>
+	<div align="center">
+	<button class='basic-butt' on:click={retard15}>- 15</button>
+	<button class='basic-butt' on:click={advance15}>+ 15</button><br/>
+	<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
+	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Redo Sync</button>
+	</div>
 </div>
 {:else if $tage == 'ADJUSTED'}
 <div>
 	<p>Has the watch been adjusted or has it's timekeeping been otherwise interrupted since last tracked?</p>
-	<button on:click={() => wasWatchAdjusted(true)}>Yes</button>
-	<button on:click={() => wasWatchAdjusted(false)}>No</button>
+	<div align="center">
+		<button class='basic-butt' on:click={() => wasWatchAdjusted(true)}>Yes</button>
+		<button class='basic-butt' on:click={() => wasWatchAdjusted(false)}>No</button>
+	</div>
 </div>
 {/if}
 <Calc bind:this={calc}/>
 {#if $tage == 'RESULTS'}
-<button on:click={() => { $tage = 'SYNC'; }}>Begin another sync</button>
+<div align="center"><br/><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
 {/if}
 
 <style>
+p {
+	padding-left: 6%;
+	padding-right: 6%;
+}
+.basic-butt {
+	min-width: 30%;
+}
 </style>

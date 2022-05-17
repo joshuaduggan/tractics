@@ -93,6 +93,13 @@ export function addTrac(trac) {
     });
 }
 
+export function escapeForHTML(str) {
+    return str.replace(/[&<>'"]/g, tag => ({
+            '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+        }[tag] || tag));
+}
+
+
 //TESTING START
 /**export let testData =
 [{"id":1,"susName":"Test Data Watch",

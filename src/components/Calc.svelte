@@ -40,7 +40,7 @@ export function calcAccuracy(t) {
     trac = t;
 }
 </script>
-
+<div>
 <p>
 {#if $tage == 'RESULTS'}
     Your watch is now <strong>{trac.secondsOff} seconds</strong> from system time.
@@ -57,55 +57,55 @@ export function calcAccuracy(t) {
 </p>
 
 {#if $tage == 'RESULTS' && 'hoursSinceLastAdj' in trac}
-    <table>
+    <table align='center'>
         <tr><th colspan=5 align="center">Since Latest Adjustment</th></tr>
         <tr>
-            <th></th>
+            <th>Days Passed</th>
             <th>System</th>
             <th>Watch</th>
             <th>Diff</th>
-            <th></th>
+            <th>SPD</th>
         </tr>
         <tr>
-            <td>{Math.round((trac.sysDate.getTime() - adjTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10} days ago:</td>
+            <td>{Math.round((trac.sysDate.getTime() - adjTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10}</td>
             <td>{adjTrac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{adjTrac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
-            <td>{adjTrac.secondsOff}</td>
-            <td rowspan=2 class='spdres'>{trac.spdOffSinceLastAdj} spd</td>
+            <td>{adjTrac.secondsOff.toFixed(1)}</td>
+            <td rowspan=2 class='spdres'>{trac.spdOffSinceLastAdj.toFixed(1)}</td>
         </tr>
         <tr>
-            <td>Now:</td>
+            <td>Now</td>
             <td>{trac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{trac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
-            <td>{trac.secondsOff}</td>
+            <td>{trac.secondsOff.toFixed(1)}</td>
         </tr>
     {#if prevTrac}
         <tr><th colspan=5>&nbsp;</th></tr>
         <tr><th colspan=5 align="center">Since Latest Measurement</th></tr>
         <tr>
-            <th></th>
+            <th>Days Passed</th>
             <th>System</th>
             <th>Watch</th>
             <th>Diff</th>
-            <th></th>
+            <th>SPD</th>
         </tr>
         <tr>
-            <td>{Math.round((trac.sysDate.getTime() - prevTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10} days ago:</td>
+            <td>{Math.round((trac.sysDate.getTime() - prevTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10}</td>
             <td>{prevTrac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{prevTrac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
-            <td>{prevTrac.secondsOff}</td>
-            <td rowspan=2>{prevSpdOffSince} spd</td>
+            <td>{prevTrac.secondsOff.toFixed(1)}</td>
+            <td rowspan=2>{prevSpdOffSince.toFixed(1)}</td>
         </tr>
         <tr>
-            <td>Now:</td>
+            <td>Now</td>
             <td>{trac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{trac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
-            <td>{trac.secondsOff}</td>
+            <td>{trac.secondsOff.toFixed(1)}</td>
         </tr>
     {/if}
     </table>
 {/if}
-
+</div>
 <style>
 table td + td, table th + th { border-left:1px solid; }
 table, th, td {
@@ -114,7 +114,14 @@ table, th, td {
     padding-left: 4px;
     padding-right: 4px;
 }
+td {
+    text-align: right;
+}
 .spdres {
     background-color: yellow;
+}
+div {
+    padding-left: 6%;
+    padding-right: 6%;
 }
 </style>
