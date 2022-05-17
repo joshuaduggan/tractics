@@ -1,5 +1,5 @@
-Concisely standardize output into chart
-
+Color match numbers chart to description
+Add multiple hands color matched to numbers
 
 ?
 Profit

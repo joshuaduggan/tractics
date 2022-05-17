@@ -1,7 +1,7 @@
 <script>
 import { onMount } from "svelte";
 import * as tm from '../tracmanager.js'; // use tm prefix for clarity
-import { watches } from '../tracmanager.js'; // import watches specificaly for brevity
+import { watches, tage } from '../tracmanager.js'; // import watches specificaly for brevity
 
 let selectedId = 0;
 
@@ -9,7 +9,7 @@ onMount(() => {
     watches.subscribe((ws) => {
         if (selectedId != ws[0].id) {
             selectedId = ws[0].id;
-            tm.tage.set('SYNC');
+            $tage = 'SYNC';
         }
     });
     selectedId = $watches[0].id;
@@ -78,6 +78,7 @@ function selected() {
         }
     }
     selectedId = $watches[0].id;
+    $tage = 'SYNC';
 }
 
 function escapeForHTML(str) {

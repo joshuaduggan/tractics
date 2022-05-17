@@ -2,7 +2,9 @@
 import { watches, tage } from '../tracmanager.js';
 
 let trac; // the latest trac - the one calcAccuracy sets
-let adjTrac;
+let adjTrac; // the trac we're mainly comparing to - the first one after the latest adjustment
+let prevTrac; // the trac immediately previous to what we're doing now - secondary comparison
+let prevSpdOffSince;
 
 /**
  * 
@@ -13,6 +15,7 @@ export function calcAccuracy(t) {
     let millisOff = t.watchDate.getTime() - t.sysDate.getTime();
     let millisSinceLastAdj = 0;
     let millisOffAfterLastAdj;
+    prevTrac = undefined;
     for (let i = ts.length - 1; i >= 0; i--) {
         adjTrac = ts[i];
         millisSinceLastAdj = t.sysDate.getTime() - ts[i].sysDate.getTime();
@@ -26,6 +29,13 @@ export function calcAccuracy(t) {
         let mspdOffSinceLastAdj = millisDifBetweents / millisSinceLastAdj * 1000 * 60 * 60 * 24;
         t.secondsOffLastAdj = Math.round(millisOffAfterLastAdj / 100) / 10;
         t.spdOffSinceLastAdj = Math.round(mspdOffSinceLastAdj / 100) / 10;
+        // if there's also a non adj previous trac to compare to
+        if (ts.length > 1 && ts[ts.length - 1] != adjTrac) {
+            prevTrac = ts[ts.length - 1];
+            let sElapsedm = prevTrac.sysDate.getTime() - t.sysDate.getTime();
+            let wElapsedm = prevTrac.watchDate.getTime() - t.watchDate.getTime();
+            prevSpdOffSince = Math.round((wElapsedm - sElapsedm) / (sElapsedm / (24 * 60 * 60 * 10))) / 10;
+        }
     }
     trac = t;
 }
@@ -35,9 +45,11 @@ export function calcAccuracy(t) {
 {#if $tage == 'RESULTS'}
     Your watch is now <strong>{trac.secondsOff} seconds</strong> from system time.
     {#if 'hoursSinceLastAdj' in trac}
-        It was <strong>{trac.secondsOffLastAdj} seconds</strong> from system time when synced after it's latest adjustment
-        <strong>{trac.hoursSinceLastAdj} hours</strong> ago. It has {trac.spdOffSinceLastAdj < 0 ? 'lost': 'gained'} time at an average of
-            {Math.abs(trac.spdOffSinceLastAdj)} seconds per day (<strong>{trac.spdOffSinceLastAdj} SPD</strong>) since it was last adjusted.
+        It was <strong>{trac.secondsOffLastAdj} seconds</strong> from system time when synced after
+        it's latest adjustment <strong>{trac.hoursSinceLastAdj} hours</strong> ago. It has
+        {trac.spdOffSinceLastAdj < 0 ? 'lost': 'gained'} time at an average of
+        {Math.abs(trac.spdOffSinceLastAdj)} seconds per day (<span  class='spdres'><strong>{trac.spdOffSinceLastAdj}
+        SPD</strong></span>) since it was last adjusted.
     {:else}
         Sync this again with your watch later to learn it's drift in seconds per day.
     {/if}
@@ -67,6 +79,30 @@ export function calcAccuracy(t) {
             <td>{trac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{trac.secondsOff}</td>
         </tr>
+    {#if prevTrac}
+        <tr><th colspan=5>&nbsp;</th></tr>
+        <tr><th colspan=5 align="center">Since Latest Measurement</th></tr>
+        <tr>
+            <th></th>
+            <th>System</th>
+            <th>Watch</th>
+            <th>Diff</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>{Math.round((trac.sysDate.getTime() - prevTrac.sysDate.getTime()) / (100 * 60 * 60 * 24)) / 10} days ago:</td>
+            <td>{prevTrac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{prevTrac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{prevTrac.secondsOff}</td>
+            <td rowspan=2>{prevSpdOffSince} spd</td>
+        </tr>
+        <tr>
+            <td>Now:</td>
+            <td>{trac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{trac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
+            <td>{trac.secondsOff}</td>
+        </tr>
+    {/if}
     </table>
 {/if}
 

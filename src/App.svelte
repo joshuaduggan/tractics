@@ -82,8 +82,9 @@ function wasWatchAdjusted(wasIt) {
 {:else if $tage == 'ALTER'}
 <div>
 	<p>Does the clock match the time on your watch? Adjust the indicated time to match your watch.</p>
-	<button on:click={retard15}>- 15</button><button on:click={advance15}>+ 15</button>
-	<button on:click={confirmWatchIndicated}>Watch is showing {clockTime.toLocaleTimeString().replace('AM', '').replace('PM', '')}</button>
+	<button on:click={retard15}>- 15</button> <button on:click={advance15}>+ 15</button>
+	<button on:click={confirmWatchIndicated}>Continue</button>
+	<button on:click={() => { $tage = 'SYNC'; }}>Cancel</button>
 </div>
 {:else if $tage == 'ADJUSTED'}
 <div>

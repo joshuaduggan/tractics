@@ -11,10 +11,12 @@ $: hours = clockTime.getHours();
 $: minutes = clockTime.getMinutes();
 $: seconds = clockTime.getSeconds() + (clockTime.getMilliseconds() / 1000);
 
+$: if (offset) updateClockTime();
+
+let digitalText;
+
 onMount(() => {
-	const interval = setInterval(() => {
-		clockTime = new Date(new Date().getTime() + offset);
-	}, 100);
+	const intervalAnalog = setInterval(() => { updateClockTime() }, 100);
 
 	tage.subscribe((v) => { if (v == 'SYNC') offset = 0; });
 
@@ -22,6 +24,16 @@ onMount(() => {
 		clearInterval(interval);
 	};
 });
+
+function updateClockTime() {
+	let oldSecs = clockTime.getSeconds();
+	clockTime = new Date(new Date().getTime() + offset);
+	if (oldSecs != clockTime.getSeconds()) {
+		digitalText = clockTime.toLocaleTimeString('en-US',
+			{hour: '2-digit', minute: '2-digit', second: '2-digit'})
+			.replace('AM', '').replace('PM', '');
+	}
+}
 </script>
 
 <svg viewBox='-50 -50 100 100'>
@@ -62,13 +74,16 @@ onMount(() => {
 		transform='rotate({6 * minutes + seconds / 10})'
 	/>
 
-	<!-- second hand -->
 	{#if $tage != 'SYNC'}
+	<!-- second hand -->
 	<g transform='rotate({6 * seconds})'>
 		<line class='second' y1='10' y2='-38'/>
 		<line class='second-counterweight' y1='10' y2='2'/>
 	</g>
 	{/if}
+
+	<text dominant-baseline="middle" text-anchor="middle" class="digital-text"
+		textLength=70% lengthAdjust=spacingAndGlyphs>{digitalText}</text>
 </svg>
 
 <style>
@@ -77,6 +92,12 @@ onMount(() => {
 		max-height: 120px;
 		/*width: 100%;
 		height: 100%;*/
+	}
+
+	.digital-text {
+		font-family: 'Courier New', Courier, monospace;
+		font-weight: bold;
+		fill: #666;
 	}
 
 	.clock-face {
