@@ -1,9 +1,15 @@
 <script>
 import { onMount } from "svelte";
+import Papa from 'papaparse';
 import * as tm from '../tracmanager.js'; // use tm prefix for clarity
 import { watches, tage } from '../tracmanager.js'; // import watches specificaly for brevity
 
 let selectedId = 0;
+
+let canWriteClipboard = false;
+//!!! navigator.permissions and share api in general seems broken in iOS and effectively crashes the app that's why the
+// ?. operator is used here. Hopefully it will work in future. !!!
+navigator.permissions?.query({name: 'clipboard-write'}).then(r => canWriteClipboard = r.state == 'granted');
 
 onMount(() => {
     watches.subscribe((ws) => {
@@ -53,6 +59,10 @@ function isNewWatchNameOk(susNewName) {
     return true;
 }
 
+function csvWatch() {
+    navigator.clipboard.writeText(Papa.unparse($watches[0].tracs));
+}
+
 /**
  * Calls the relevant action method or moves the newly selected watch to the top of the 
  * selected list
@@ -73,6 +83,9 @@ function selected() {
             case 'DELETE':
                 deleteWatch();
                 break;
+            case 'CSV':
+                csvWatch();
+                break;
             case undefined:// needed because this gets called on load before initialized
                 return;
         }
@@ -90,6 +103,9 @@ function selected() {
     <option value='ADD'>Add A New Watch</option>
     <option value='RENAME'>Rename Active Watch</option>
     <option value='DELETE'>Delete Active Watch</option>
+    {#if (canWriteClipboard)}
+        <option value='CSV'>Log Active Watch To Clipboard</option>
+    {/if}
 </select>
 
 <style>

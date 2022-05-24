@@ -71,6 +71,8 @@ function wasWatchAdjusted(wasIt) {
 	$tage = 'RESULTS';
 }
 </script>
+
+<main>
 <div align='center'>
 <WatchSelect/><br/>
 <Clock bind:offset bind:clockTime/>
@@ -103,6 +105,7 @@ function wasWatchAdjusted(wasIt) {
 {#if $tage == 'RESULTS'}
 <div align="center"><br/><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
 {/if}
+</main>
 
 <style>
 p {
