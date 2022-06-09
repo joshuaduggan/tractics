@@ -112,7 +112,7 @@ function updateClockTime() {
 
 	.brand-text {
 		font-family: Helvetica, Arial, sans-serif;
-		fill: #333;
+		fill: #666;
 	}
 
 	.digital-text {
@@ -138,12 +138,12 @@ function updateClockTime() {
 
 	.hour {
 		stroke: #333;
-		stroke-width: 2;
+		stroke-width: 3;
 	}
 
 	.minute {
 		stroke: #333;
-		stroke-width: 1.5;
+		stroke-width: 2;
 	}
 
 	.second {
