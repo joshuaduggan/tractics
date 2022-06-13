@@ -2,7 +2,7 @@
 import * as tm from './tracmanager.js';
 import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
-import ResTab from './components/ResTab.svelte';
+import ResTable from './components/ResTable.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
 //import ResChart from './components/ResChart.svelte';
@@ -107,7 +107,7 @@ function wasWatchAdjusted(wasIt) {
 <div align="center"><br/><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
 {/if}
 
-<ResTab/>
+<ResTable/>
 </main>
 
 <style>

@@ -7,8 +7,8 @@ import { watches, tage } from '../tracmanager.js'; // import watches specificaly
 let selectedId = 0;
 
 let canWriteClipboard = false;
-//!!! navigator.permissions and share api in general seems broken in iOS and effectively crashes the app that's why the
-// ?. operator is used here. Hopefully it will work in future. !!!
+//!!! navigator.permissions and share api in general seems broken in iOS and effectively crashes the
+// app that's why the ?. operator is used here. Hopefully it will work in future. !!!
 navigator.permissions?.query({name: 'clipboard-write'}).then(r => canWriteClipboard = r.state == 'granted');
 
 onMount(() => {
