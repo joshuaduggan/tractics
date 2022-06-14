@@ -1,12 +1,53 @@
 <script>
+import { onMount } from 'svelte';
+
 import { watches, tage } from '../tracmanager.js';
 
-let res = {
-    sd: ['6/9/22', '6/10/22', '6/11/22'],
-    st: ['12:00:00', '12:00:00', '12:00:00'],
-    wt: ['12:00:00', '12:00:00', '12:00:00'],
-    td: ['-32', '45', '-16'],
-    so: ['-3.4', '4.0']
+onMount(() => {
+    watches.subscribe(() => { retrievePrevAdj(); });
+    tage.subscribe((v) => {
+        if (v == 'RESULTS') {
+            tracs[2] = $watches[0].tracs.at(-1);
+            buildTableInfos();
+        } else if (v == 'SYNC') {
+        }
+    });
+});
+
+let tracs = new Array(3); // [0]: Adj, [1]: Prev, [2]: Now
+let infos;
+infos = new Array(3);
+buildTableInfos(); // fill the infos with ''s
+
+function retrievePrevAdj() {
+    let ts = $watches[0].tracs;
+    tracs.fill(undefined);
+    for (let i = ts.length - 1; i >= 0; i--) {
+        if (ts[i].wasWatchAdj) break;
+        if (i == ts.length - 1) tracs[1] = ts[i];
+        else tracs[0] = ts[i];
+    }
+    buildTableInfos();
+}
+
+function buildTableInfos() {
+    for (let i = 0; i < 3; i++) {
+        let trac = tracs[i];
+        let info = new Array(5).fill('');
+        if (trac) {
+            info[0] = trac.sysDate.toLocaleDateString(undefined, {dateStyle: 'short'});
+            info[1] = trac.sysDate.toLocaleTimeString(undefined, {hour12: false});
+            info[2] = trac.watchDate.toLocaleTimeString(undefined, {hour12: false});
+            info[3] = trac.secondsOff;
+            if (tracs[2]) // if there are Now results
+                info[4] =
+                    (i == 0) ? tracs[2].spdOffSinceLastAdj : // currently building Adj
+                    (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
+                    String.fromCharCode(0x27F5); // currently building Now
+        }
+        infos[i] = info;
+    }
+    infos = infos;
 }
 </script>
 
@@ -22,34 +63,34 @@ let res = {
         <th>Now</th>
     </tr>
     <tr>
-        <th>System Date</th>
-        <td>{res.sd[0]}</td>
-        <td>{res.sd[1]}</td>
-        <td>{res.sd[2]}</td>
+        <th>Date</th>
+        {#each infos as infoRow}
+        <td>{infoRow[0]}</td>
+        {/each}
     </tr>
     <tr>
-        <th>System Time</th>
-        <td>{res.st[0]}</td>
-        <td>{res.st[1]}</td>
-        <td>{res.st[2]}</td>
+        <th>System</th>
+        {#each infos as infoRow}
+        <td>{infoRow[1]}</td>
+        {/each}
     </tr>
     <tr>
-        <th>Watch Time</th>
-        <td>{res.wt[0]}</td>
-        <td>{res.wt[1]}</td>
-        <td>{res.wt[2]}</td>
+        <th>Watch</th>
+        {#each infos as infoRow}
+        <td>{infoRow[2]}</td>
+        {/each}
     </tr>
     <tr>
-        <th>Time Diff</th>
-        <td>{res.td[0]}</td>
-        <td>{res.td[1]}</td>
-        <td>{res.td[2]}</td>
+        <th>Diff</th>
+        {#each infos as infoRow}
+        <td>{infoRow[3]}</td>
+        {/each}
     </tr>
     <tr>
-        <th>SPD Off</th>
-        <td>{res.so[0]}</td>
-        <td>{res.so[1]}</td>
-        <td>&larr;</td>
+        <th>SPD</th>
+        {#each infos as infoRow}
+        <td>{infoRow[4]}</td>
+        {/each}
     </tr>
 </table>
 

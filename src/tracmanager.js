@@ -14,7 +14,8 @@ import { writable, get } from 'svelte/store';
  *   secondsOff: number,
  *   secondsOffLastAdj: number,
  *   hoursSinceLastAdj: number,
- *   spdOffSinceLastAdj: number}
+ *   spdOffSinceLastAdj: number,
+ *   spdOffSincePrev: number}
  */
 
 /**

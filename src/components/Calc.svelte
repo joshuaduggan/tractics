@@ -4,7 +4,6 @@ import { watches, tage } from '../tracmanager.js';
 let trac; // the latest trac - the one calcAccuracy sets
 let adjTrac; // the trac we're mainly comparing to - the first one after the latest adjustment
 let prevTrac; // the trac immediately previous to what we're doing now - secondary comparison
-let prevSpdOffSince;
 
 /**
  * 
@@ -34,7 +33,7 @@ export function calcAccuracy(t) {
             prevTrac = ts[ts.length - 1];
             let sElapsedm = prevTrac.sysDate.getTime() - t.sysDate.getTime();
             let wElapsedm = prevTrac.watchDate.getTime() - t.watchDate.getTime();
-            prevSpdOffSince = Math.round((wElapsedm - sElapsedm) / (sElapsedm / (24 * 60 * 60 * 10))) / 10;
+            t.spdOffSincePrev = Math.round((wElapsedm - sElapsedm) / (sElapsedm / (24 * 60 * 60 * 10))) / 10;
         }
     }
     trac = t;
@@ -94,7 +93,7 @@ export function calcAccuracy(t) {
             <td>{prevTrac.sysDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{prevTrac.watchDate.toLocaleTimeString().replace('AM', '').replace('PM', '')}</td>
             <td>{prevTrac.secondsOff.toFixed(1)}</td>
-            <td rowspan=2>{prevSpdOffSince.toFixed(1)}</td>
+            <td rowspan=2>{trac.spdOffSincePrev.toFixed(1)}</td>
         </tr>
         <tr>
             <td>Now</td>
