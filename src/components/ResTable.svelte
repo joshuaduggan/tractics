@@ -3,33 +3,51 @@ import { onMount } from 'svelte';
 
 import { watches, tage } from '../tracmanager.js';
 
-onMount(() => {
-    watches.subscribe(() => { retrievePrevAdj(); });
-    tage.subscribe((v) => {
-        if (v == 'RESULTS') {
-            tracs[2] = $watches[0].tracs.at(-1);
-            buildTableInfos();
-        } else if (v == 'SYNC') {
-        }
-    });
-});
-
 let tracs = new Array(3); // [0]: Adj, [1]: Prev, [2]: Now
 let infos;
 infos = new Array(3);
-buildTableInfos(); // fill the infos with ''s
+buildTableInfos(); // fill the infos with ''
 
-function retrievePrevAdj() {
+onMount(() => {
+    watches.subscribe(() => { retrievePrevAdjNow(); });
+    tage.subscribe((v) => { if (v == 'SYNC') retrievePrevAdjNow(); });
+});
+
+/**
+ * finds and assigns the correct tracs to the tracs array. What this generates
+ * is used by buildTableInfos to fill the infos array (table).
+ */
+function retrievePrevAdjNow() {
     let ts = $watches[0].tracs;
     tracs.fill(undefined);
-    for (let i = ts.length - 1; i >= 0; i--) {
-        if (ts[i].wasWatchAdj) break;
-        if (i == ts.length - 1) tracs[1] = ts[i];
-        else tracs[0] = ts[i];
+    let numSinceAdj = 1;
+    for (let i = ts.length - 1; i >= 0 && !ts[i].wasWatchAdj; i--) numSinceAdj++;
+
+    if ($tage == 'RESULTS') {
+        if (numSinceAdj == 1) {
+            tracs[2] = ts[ts.length - numSinceAdj];
+        } else if (numSinceAdj == 2) {
+            tracs[1] = ts[ts.length - 2];
+            tracs[2] = ts[ts.length - 1];
+        } else {
+            tracs[0] = ts[ts.length - numSinceAdj];
+            tracs[1] = ts[ts.length - 2];
+            tracs[2] = ts[ts.length - 1];
+        }
+    } else {
+        if (numSinceAdj == 1) {
+            tracs[1] = ts[ts.length - 1];
+        } else {
+            tracs[0] = ts[ts.length - numSinceAdj];
+            tracs[1] = ts[ts.length - 1];
+        }
     }
     buildTableInfos();
 }
 
+/**
+ * Fills the infos array (table). Call this anytime the tracs array is modified.
+ */
 function buildTableInfos() {
     for (let i = 0; i < 3; i++) {
         let trac = tracs[i];
@@ -48,6 +66,7 @@ function buildTableInfos() {
         infos[i] = info;
     }
     infos = infos;
+history
 }
 </script>
 

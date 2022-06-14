@@ -68,8 +68,8 @@ function confirmWatchIndicated() {
 function wasWatchAdjusted(wasIt) {
 	trac.wasWatchAdj = wasIt;
 	calc.calcAccuracy(trac);
-	tm.addTrac(trac);
 	$tage = 'RESULTS';
+	tm.addTrac(trac);
 }
 </script>
 

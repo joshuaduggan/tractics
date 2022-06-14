@@ -28,13 +28,10 @@ export function calcAccuracy(t) {
         let mspdOffSinceLastAdj = millisDifBetweents / millisSinceLastAdj * 1000 * 60 * 60 * 24;
         t.secondsOffLastAdj = Math.round(millisOffAfterLastAdj / 100) / 10;
         t.spdOffSinceLastAdj = Math.round(mspdOffSinceLastAdj / 100) / 10;
-        // if there's also a non adj previous trac to compare to
-        if (ts.length > 1 && ts[ts.length - 1] != adjTrac) {
-            prevTrac = ts[ts.length - 1];
-            let sElapsedm = prevTrac.sysDate.getTime() - t.sysDate.getTime();
-            let wElapsedm = prevTrac.watchDate.getTime() - t.watchDate.getTime();
-            t.spdOffSincePrev = Math.round((wElapsedm - sElapsedm) / (sElapsedm / (24 * 60 * 60 * 10))) / 10;
-        }
+        prevTrac = ts[ts.length - 1];
+        let sElapsedm = prevTrac.sysDate.getTime() - t.sysDate.getTime();
+        let wElapsedm = prevTrac.watchDate.getTime() - t.watchDate.getTime();
+        t.spdOffSincePrev = Math.round((wElapsedm - sElapsedm) / (sElapsedm / (24 * 60 * 60 * 10))) / 10;
     }
     trac = t;
 }
