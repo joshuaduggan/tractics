@@ -1,7 +1,8 @@
 <script>
 import { onMount } from 'svelte';
-
 import { watches, tage } from '../tracmanager.js';
+
+const ARR_STR = String.fromCharCode(0x2190) + ' ' + String.fromCharCode(0x2190);
 
 let tracs = new Array(3); // [0]: Adj, [1]: Prev, [2]: Now
 let infos;
@@ -51,20 +52,25 @@ function retrievePrevAdjNow() {
  * Fills the infos array (table). Call this anytime the tracs array is modified.
  */
 function buildTableInfos() {
+    // iterates through the tracs array (oldest, prev, now) and fills the infos
+    // (i.e. the column of relevant data) for each trac.
     for (let i = 0; i < 3; i++) {
         let trac = tracs[i];
-        let info = new Array(5).fill('');
+        let info = new Array(6).fill('');
         if (trac) {
             info[0] = trac.sysDate.toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'});
             info[1] = trac.sysDate.toLocaleTimeString(undefined, {hour12: false});
             info[2] = trac.watchDate.toLocaleTimeString(undefined, {hour12: false});
             info[3] = trac.secondsOff;
-            if (tracs[2]) // if there are Now results
+            if (tracs[1]) // if there are Prev results
                 info[4] =
+                    (i == 0) ? tracs[1].spdOffSinceLastAdj : // currently building Adj
+                    (i == 1) ? ARR_STR : ''// currently building Prev
+            if (tracs[2]) // if there are Now results
+                info[5] =
                     (i == 0) ? tracs[2].spdOffSinceLastAdj : // currently building Adj
-                    (i == 1) ? tracs[2].spdOffSincePrev : ''; // currently building Prev
-//                    (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
-//                    String.fromCharCode(0x2190); // currently building Now
+                    (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
+                    ARR_STR; // currently building Now
         }
         infos[i] = info;
     }
@@ -74,44 +80,46 @@ history
 </script>
 
 <table id="not-foot-table">
-<!--    <tr>
-        <th></th>
-        <th colspan="3">Recorded Times</th>
-    </tr>-->
     <tr class='colhead'>
         <th></th>
-        <th class='pastdata'>Oldest</th>
-        <th class='pastdata'>Prev</th>
+        <th>Oldest</th>
+        <th class='prevdata'>Prev</th>
         <th class='nowdata'>Now</th>
     </tr>
     <tr>
         <th class='rowhead'>Date</th>
-        <td class='pastdata'>{infos[0][0]}</td>
-        <td class='pastdata'>{infos[1][0]}</td>
+        <td>{infos[0][0]}</td>
+        <td class='prevdata'>{infos[1][0]}</td>
         <td class='nowdata'>{infos[2][0]}</td>
     </tr>
     <tr>
         <th class='rowhead'>System</th>
-        <td class='pastdata'>{infos[0][1]}</td>
-        <td class='pastdata'>{infos[1][1]}</td>
+        <td >{infos[0][1]}</td>
+        <td class='prevdata'>{infos[1][1]}</td>
         <td class='nowdata'>{infos[2][1]}</td>
     <tr>
         <th class='rowhead'>Watch</th>
-        <td class='pastdata'>{infos[0][2]}</td>
-        <td class='pastdata'>{infos[1][2]}</td>
+        <td >{infos[0][2]}</td>
+        <td class='prevdata'>{infos[1][2]}</td>
         <td class='nowdata'>{infos[2][2]}</td>
     </tr>
     <tr>
         <th class='rowhead'>Diff</th>
-        <td class='pastdata'>{infos[0][3]}</td>
-        <td class='pastdata'>{infos[1][3]}</td>
+        <td>{infos[0][3]}</td>
+        <td class='prevdata'>{infos[1][3]}</td>
         <td class='nowdata'>{infos[2][3]}</td>
     </tr>
     <tr>
-        <th class='rowhead'>SPD</th>
-        <td class='nowdata'><span class="highlight">{infos[0][4]}</span></td>
-        <td class='nowdata'><span class="highlight">{infos[1][4]}</span></td>
-        <td class='nowdata'>{infos[2][4]}</td>
+        <th class='rowhead prevdata'>SPD</th>
+        <td class='prevdata emphasis'>{infos[0][4]}</td>
+        <td class='prevdata'>{infos[1][4]}</td>
+        <td class='nowdata'></td>
+    </tr>
+    <tr>
+        <th class='rowhead nowdata'>SPD</th>
+        <td class='nowdata emphasis'>{infos[0][5]}</td>
+        <td class='nowdata emphasis'>{infos[1][5]}</td>
+        <td class='nowdata'>{infos[2][5]}</td>
     </tr>
 </table>
 
@@ -124,31 +132,22 @@ th, td {
     padding-left: 6px;
     padding-right: 6px;
 }
-.highlight {
-    font-weight: bold;
-    /*background-color: yellow;*/
-}
 td {
     font-family: 'Courier New', Courier, monospace;
     text-align: right;
     width: 8ch;
     height: 1ch;
 }
-.pastdata {
-    background-color: #EEE;
-}
-.nowdata {
-    background-color: #BBB;
-}
 .rowhead {
     text-align: left;
 }
-.colhead {
-    /*text-align: right;*/
+.prevdata {
+    background-color: #EEE;
 }
-#not-foot-table {
-/*	position: fixed;
-    bottom: 0;
-    width: 88%;*/
+.nowdata {
+    background-color: #CCC;
+}
+.emphasis {
+    font-weight: bold;
 }
 </style>

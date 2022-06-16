@@ -101,10 +101,10 @@ function selected() {
 {/each}
     <option value='' disabled>--------------</option>
     <option value='ADD'>Add A New Watch</option>
-    <option value='RENAME'>Rename Active Watch</option>
-    <option value='DELETE'>Delete Active Watch</option>
+    <option value='RENAME'>Rename "{tm.escapeForHTML($watches[0].susName)}"</option>
+    <option value='DELETE'>Delete "{tm.escapeForHTML($watches[0].susName)}"</option>
     {#if (canWriteClipboard)}
-        <option value='CSV'>Log Active Watch To Clipboard</option>
+        <option value='CSV'>Log "{tm.escapeForHTML($watches[0].susName)}" To Clipboard</option>
     {/if}
 </select>
 

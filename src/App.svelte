@@ -93,7 +93,7 @@ function wasWatchAdjusted(wasIt) {
 	<button class='basic-butt' on:click={retard15}>- 15</button>
 	<button class='basic-butt' on:click={advance15}>+ 15</button><br/>
 	<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
-	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Redo Sync</button>
+	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
 	</div>
 	<p>Does the app clock match the time on your watch? Adjust the clock as
 		needed with the + or - 15 second increment buttons.</p>
@@ -109,7 +109,7 @@ function wasWatchAdjusted(wasIt) {
 </div>
 {/if}
 {#if $tage == 'RESULTS'}
-<div align="center"><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
+<div align="center"><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Restart Process</button></div>
 {/if}
 <Calc bind:this={calc}/>
 
