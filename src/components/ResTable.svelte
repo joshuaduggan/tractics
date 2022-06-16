@@ -20,9 +20,11 @@ onMount(() => {
 function retrievePrevAdjNow() {
     let ts = $watches[0].tracs;
     tracs.fill(undefined);
-    let numSinceAdj = 1;
-    for (let i = ts.length - 1; i >= 0 && !ts[i].wasWatchAdj; i--) numSinceAdj++;
-
+    let numSinceAdj = 0;
+    for (let i = ts.length - 1; i >= 0; i--) {
+        numSinceAdj++;
+        if (ts[i].wasWatchAdj) break;
+    }
     if ($tage == 'RESULTS') {
         if (numSinceAdj == 1) {
             tracs[2] = ts[ts.length - numSinceAdj];
@@ -53,15 +55,16 @@ function buildTableInfos() {
         let trac = tracs[i];
         let info = new Array(5).fill('');
         if (trac) {
-            info[0] = trac.sysDate.toLocaleDateString(undefined, {dateStyle: 'short'});
+            info[0] = trac.sysDate.toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'});
             info[1] = trac.sysDate.toLocaleTimeString(undefined, {hour12: false});
             info[2] = trac.watchDate.toLocaleTimeString(undefined, {hour12: false});
             info[3] = trac.secondsOff;
             if (tracs[2]) // if there are Now results
                 info[4] =
                     (i == 0) ? tracs[2].spdOffSinceLastAdj : // currently building Adj
-                    (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
-                    String.fromCharCode(0x27F5); // currently building Now
+                    (i == 1) ? tracs[2].spdOffSincePrev : ''; // currently building Prev
+//                    (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
+//                    String.fromCharCode(0x2190); // currently building Now
         }
         infos[i] = info;
     }
@@ -70,61 +73,82 @@ history
 }
 </script>
 
-<table id="foot-table">
-    <tr>
+<table id="not-foot-table">
+<!--    <tr>
         <th></th>
         <th colspan="3">Recorded Times</th>
-    </tr>
-    <tr>
+    </tr>-->
+    <tr class='colhead'>
         <th></th>
-        <th>Oldest</th>
-        <th>Prev</th>
-        <th>Now</th>
+        <th class='pastdata'>Oldest</th>
+        <th class='pastdata'>Prev</th>
+        <th class='nowdata'>Now</th>
     </tr>
     <tr>
-        <th>Date</th>
-        {#each infos as infoRow}
-        <td>{infoRow[0]}</td>
-        {/each}
+        <th class='rowhead'>Date</th>
+        <td class='pastdata'>{infos[0][0]}</td>
+        <td class='pastdata'>{infos[1][0]}</td>
+        <td class='nowdata'>{infos[2][0]}</td>
     </tr>
     <tr>
-        <th>System</th>
-        {#each infos as infoRow}
-        <td>{infoRow[1]}</td>
-        {/each}
+        <th class='rowhead'>System</th>
+        <td class='pastdata'>{infos[0][1]}</td>
+        <td class='pastdata'>{infos[1][1]}</td>
+        <td class='nowdata'>{infos[2][1]}</td>
+    <tr>
+        <th class='rowhead'>Watch</th>
+        <td class='pastdata'>{infos[0][2]}</td>
+        <td class='pastdata'>{infos[1][2]}</td>
+        <td class='nowdata'>{infos[2][2]}</td>
     </tr>
     <tr>
-        <th>Watch</th>
-        {#each infos as infoRow}
-        <td>{infoRow[2]}</td>
-        {/each}
+        <th class='rowhead'>Diff</th>
+        <td class='pastdata'>{infos[0][3]}</td>
+        <td class='pastdata'>{infos[1][3]}</td>
+        <td class='nowdata'>{infos[2][3]}</td>
     </tr>
     <tr>
-        <th>Diff</th>
-        {#each infos as infoRow}
-        <td>{infoRow[3]}</td>
-        {/each}
-    </tr>
-    <tr>
-        <th>SPD</th>
-        {#each infos as infoRow}
-        <td>{infoRow[4]}</td>
-        {/each}
+        <th class='rowhead'>SPD</th>
+        <td class='nowdata'><span class="highlight">{infos[0][4]}</span></td>
+        <td class='nowdata'><span class="highlight">{infos[1][4]}</span></td>
+        <td class='nowdata'>{infos[2][4]}</td>
     </tr>
 </table>
 
 <style>
-table, th, td {
+table {
     border-collapse: collapse;
-    padding-left: 4px;
-    padding-right: 4px;
+}
+th, td {
+    vertical-align: bottom;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+.highlight {
+    font-weight: bold;
+    /*background-color: yellow;*/
 }
 td {
+    font-family: 'Courier New', Courier, monospace;
     text-align: right;
+    width: 8ch;
+    height: 1ch;
 }
-#foot-table {
-	position: fixed;
+.pastdata {
+    background-color: #EEE;
+}
+.nowdata {
+    background-color: #BBB;
+}
+.rowhead {
+    text-align: left;
+}
+.colhead {
+    /*text-align: right;*/
+}
+#not-foot-table {
+/*	position: fixed;
     bottom: 0;
-    width: 90%;
+    width: 88%;*/
 }
 </style>

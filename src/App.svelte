@@ -77,37 +77,42 @@ function wasWatchAdjusted(wasIt) {
 <div align='center'>
 <WatchSelect/><br/>
 <Clock bind:offset bind:clockTime/>
+<ResTable/>
 </div>
+<br/>
 {#if $tage == 'SYNC'}
 <div>
-	<p>Sync when your watch reads 00, 15, 30, or 45 seconds.</p>
-	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync Time</button></div>
+	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync</button></div>
+	<p>Press 'Sync' when your watch's seconds hand reads 00, 15, 30, or 45.
+		Doing so will let this app know what time your watch is indicating.
+	</p>
 </div>
 {:else if $tage == 'ALTER'}
 <div>
-	<p>Does the clock match the time on your watch? Adjust as needed.</p>
 	<div align="center">
 	<button class='basic-butt' on:click={retard15}>- 15</button>
 	<button class='basic-butt' on:click={advance15}>+ 15</button><br/>
 	<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
 	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Redo Sync</button>
 	</div>
+	<p>Does the app clock match the time on your watch? Adjust the clock as
+		needed with the + or - 15 second increment buttons.</p>
 </div>
 {:else if $tage == 'ADJUSTED'}
 <div>
-	<p>Has the watch been adjusted or has it's timekeeping been otherwise interrupted since last tracked?</p>
 	<div align="center">
 		<button class='basic-butt' on:click={() => wasWatchAdjusted(true)}>Yes</button>
 		<button class='basic-butt' on:click={() => wasWatchAdjusted(false)}>No</button>
 	</div>
+	<p>Has the watch been adjusted or has it's timekeeping otherwise been
+		interrupted since last synced with this app?</p>
 </div>
 {/if}
-<Calc bind:this={calc}/>
 {#if $tage == 'RESULTS'}
-<div align="center"><br/><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
+<div align="center"><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Begin Another Sync</button></div>
 {/if}
+<Calc bind:this={calc}/>
 
-<ResTable/>
 </main>
 
 <style>

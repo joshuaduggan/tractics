@@ -19,13 +19,14 @@ let brandText;
 onMount(() => {
 	const intervalAnalog = setInterval(() => { updateClockTime() }, 100);
 
-	tage.subscribe((v) => { 
-		if (v == 'SYNC') {
+	watches.subscribe(() => { 
+		brandText = escapeForHTML($watches[0].susName);
+/*		if (v == 'SYNC') {
 			offset = 0;
 			brandText = 'System';
 		} else {
 			brandText = escapeForHTML($watches[0].susName);
-		}
+		}*/
 	 });
 
 	return () => {
@@ -66,34 +67,34 @@ function updateClockTime() {
 		{/each}
 	{/each}
 
-	<text y=-15% dominant-baseline="middle" text-anchor="middle" class="brand-text"
-		textLength=45% lengthAdjust=spacingAndGlyphs>{brandText}</text>
-	
-	<text y=10% dominant-baseline="middle" text-anchor="middle" class="digital-text"
-		textLength=60% lengthAdjust=spacingAndGlyphs>{digitalText}</text>
-
-	<!-- hour hand -->
-	<line
-		class='hour'
-		y1='2'
-		y2='-22'
-		transform='rotate({30 * hours + minutes / 2})'
-	/>
-
-	<!-- minute hand -->
-	<line
-		class='minute'
-		y1='4'
-		y2='-30'
-		transform='rotate({6 * minutes + seconds / 10})'
-	/>
-
+		<text y=-15% dominant-baseline="middle" text-anchor="middle" class="brand-text"
+			textLength=45% lengthAdjust=spacingAndGlyphs>{brandText}</text>
+		
 	{#if $tage != 'SYNC'}
-	<!-- second hand -->
-	<g transform='rotate({6 * seconds})'>
-		<line class='second' y1='10' y2='-38'/>
-		<!--<line class='second-counterweight' y1='10' y2='2'/>-->
-	</g>
+		<text y=10% dominant-baseline="middle" text-anchor="middle" class="digital-text"
+			textLength=60% lengthAdjust=spacingAndGlyphs>{digitalText}</text>
+
+		<!-- hour hand -->
+		<line
+			class='hour'
+			y1='2'
+			y2='-22'
+			transform='rotate({30 * hours + minutes / 2})'
+		/>
+
+		<!-- minute hand -->
+		<line
+			class='minute'
+			y1='4'
+			y2='-30'
+			transform='rotate({6 * minutes + seconds / 10})'
+		/>
+
+		<!-- second hand -->
+		<g transform='rotate({6 * seconds})'>
+			<line class='second' y1='10' y2='-38'/>
+			<!--<line class='second-counterweight' y1='10' y2='2'/>-->
+		</g>
 	{/if}
 </svg>
 
