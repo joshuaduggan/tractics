@@ -65,12 +65,12 @@ function buildTableInfos() {
             if (tracs[1]) // if there are Prev results
                 info[4] =
                     (i == 0) ? tracs[1].spdOffSinceLastAdj : // currently building Adj
-                    (i == 1) ? ARR_STR : ''// currently building Prev
+                    (i == 1 && tracs[0]) ? ARR_STR : '';// currently building Prev show arrows only if there are SPD results
             if (tracs[2]) // if there are Now results
                 info[5] =
                     (i == 0) ? tracs[2].spdOffSinceLastAdj : // currently building Adj
                     (i == 1) ? tracs[2].spdOffSincePrev : // currently building Prev
-                    ARR_STR; // currently building Now
+                    (tracs[0] || tracs[1]) ? ARR_STR : ''; // currently building Now show arrows only if there are SPD results
         }
         infos[i] = info;
     }
