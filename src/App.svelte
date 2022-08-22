@@ -2,6 +2,7 @@
 import * as tm from './tracmanager.js';
 import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
+import Dragger from './components/Dragger.svelte';
 import ResTable from './components/ResTable.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
@@ -77,6 +78,7 @@ function wasWatchAdjusted(wasIt) {
 <div align='center'>
 <WatchSelect/><br/>
 <Clock bind:offset bind:clockTime/>
+<Dragger/>
 <ResTable/>
 </div>
 <br/>

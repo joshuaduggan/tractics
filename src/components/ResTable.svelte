@@ -75,7 +75,6 @@ function buildTableInfos() {
         infos[i] = info;
     }
     infos = infos;
-history
 }
 </script>
 
