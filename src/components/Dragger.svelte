@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
     import { tweened } from 'svelte/motion';
     
     let moving = false;
@@ -15,18 +16,29 @@
         sysTimeStr: date.toLocaleTimeString(undefined, {hour12: false}),
         watchTimeStr: date.toLocaleTimeString(undefined, {hour12: false})
     };
-    const sliderXInit = (svgWidth - card.width) / 2;
-    const twn = tweened(sliderXInit, {duration:0});
+    let sliderXInit;
+    const twn = tweened(0, {duration:0});
     let moveLog = [];
     let moveSpeed;
+    let divSvgWidth; // required to get around a bug(ish) svelte issue with svg width binding
+    let mouseButtDown = false;
+
+    onMount(() => {
+        svgWidth = divSvgWidth;
+        sliderXInit = (svgWidth - card.width) / 2;
+        twn.set(sliderXInit);
+    });
     
     function start(e) {
+        if (e instanceof MouseEvent && e.buttons > 1) return; // bad way to ignore mouse other than left click
+        mouseButtDown = true;
         moving = true;
         touchLastX = (e.targetTouches) ? e.targetTouches[0].pageX : undefined;
     }
-    
+
     function stop() { // called at the end of a finger/mouse drag
-    
+        mouseButtDown = false;
+        console.log("stopping");
         if (!moving) return;
     
         if (moveLog) {
@@ -53,6 +65,8 @@
                 twn.set(toLoc, spdToDur($twn, toLoc, Math.abs(moveSpeed))).then(() => {
                     twn.set(respawnLoc, {duration:0}).then(() => {stop();});
                 });
+                console.log(moveSpeed);
+               // moving = false;
                 return;
             } else moveSpeed = undefined;
         }
@@ -74,7 +88,7 @@
     }
     
     function move(e) { // called during a finger/mouse drag
-        if (!moving) return;
+        if (!moving || !mouseButtDown) return;
     
         let ml = {
             secs: Date.now(),
@@ -94,9 +108,10 @@
     </script>
     
     <svelte:window on:mouseup={stop} on:touchend={stop} on:touchcancel={stop} on:mousemove={move} on:touchmove={move}/>
-    <svg on:mousedown={start} on:touchstart={start} width={svgWidth} height="230">
+    <div bind:clientWidth={divSvgWidth}>
+    <svg on:mousedown={start} on:touchstart={start} width=100% height="230">
         <defs>
-            <svg id='card' width={card.width} height="{card.height}">
+            <svg id='card' width={card.width} height={card.height}>
                 <rect x={card.stroke / 2} y={card.stroke / 2} rx="25" ry="25" width={card.width - card.stroke}
                     height={card.height - card.stroke} stroke="black" fill="lightblue" stroke-width={card.stroke}/>
                     <text class="ch" x="50%" y="{1 + card.topMarginEm}em">Current</text>
@@ -120,6 +135,7 @@
         <use xlink:href='#card' x={svgWidth - card.width} y="10"/>
     
     </svg>
+    </div>
     
     <style>
     svg {
