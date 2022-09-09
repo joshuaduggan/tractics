@@ -8,79 +8,68 @@ let touchLastX;
 const minSkipSpeed = 0.5;
 let svgWidth = 300;
 let sliderRestX;
-const twn = tweened(0, {duration:0});
+const leftTwn = tweened(0, {duration:0});
+const midTwn = tweened(0, {duration:0});
+const rightTwn = tweened(0, {duration:0});
+const extraTwn = tweened(0, {duration:0});
 let moveLog = [];
 let moveSpeed;
 let mouseButtDown = false;
-let date = new Date();
 
 class Card {
-    constructor(title, trac) {
+    constructor() {
         this.width = 88;
         this.height = 196;
         this.stroke = 2;
         this.topMarginEm = 0.5;
         this.x = undefined;
-        this.title = title;
-        this.setTrac(trac);
+        this.setTrac();
     }
-    setTrac(trac) {
+    setTrac(title, trac, trans, twn, transStart, transEnd) {
+        this.title = title ? title : '';
         this.trac = trac;
+        switch (trans) {
+            case 'SLIDE':
+                twn.set(transStart, {duration:0}).then(
+                    twn.set(transEnd, spdToDur(transStart, transEnd, minSkipSpeed)));
+                break;
+        }
     }
     getSysDate() { return this.trac ? this.trac.sysDate.toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'}) : '' }
     getSysTime() { return this.trac ? this.trac.sysDate.toLocaleTimeString(undefined, {hour12: false}) : '' }
-    getWatchTime() { return this.trac ? this.trac.sysDate.toLocaleTimeString(undefined, {hour12: false}) : '' }
+    getWatchTime() { return this.trac ? this.trac.watchDate.toLocaleTimeString(undefined, {hour12: false}) : '' }
     getDiff() { return this.trac ? this.trac.secondsOff : ''; }
+    getTitle() { return this.trac ? this.title : ''; }
 }
 const C = new Card(); // a card to allow access to default values
+const leftCard = new Card();
+const midCard = new Card();
+const rightCard = new Card();
+const extraCard = new Card();
 $: { // activates whenever svgWidth changes (which is bound to the svg enclosing div)
     sliderRestX = (svgWidth - C.width) / 2;
-    twn.set(sliderRestX);
+    midTwn.set(sliderRestX);
+    rightTwn.set(svgWidth - C.width);
 }
-let cards = [new Card('Prev'), new Card('Oldest'), new Card('Current')]
-$: cards[0].x = $twn;
-cards[1].x = 0;
-$: cards[2].x = svgWidth - C.width;
-
-/*// ideally this would be a class but as of now Svelte's compiler does not understand class fields
-let card = {
-    width: 88,
-    height: 196,
-    stroke: 2,
-    topMarginEm: 0.5,
-    x,
-    title,
-    trac
-};
-let cards = [{}, {}, {}];
-cards.forEach(c => Object.assign(c, card));
-$: cards[0].x = $twn;
-cards[0].name = 'Prev';
-cards[1].x = 0;
-cards[1].name = 'Oldest';
-$: cards[2].x = svgWidth - card.width;
-cards[2].name = 'Current';
-function cardInit(i, trac, name) {
-    if (!trac) return;
-    let c = cards[i];
-    c.name = name;
-    c.sysDateStr = trac.sysDate.toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'});
-    c.sysTimeStr = trac.sysDate.toLocaleTimeString(undefined, {hour12: false});
-    c.watchTimeStr = trac.watchDate.toLocaleTimeString(undefined, {hour12: false});
-    c.diff = trac.secondsOff;
-}*/
+$: leftCard.x = $leftTwn;
+$: midCard.x = $midTwn;
+$: rightCard.x = $rightTwn;
+$: extraCard.x = $extraTwn;
 
 onMount(() => {
-    watches.subscribe(() => { retrievePrevAdjNow(); });
-    tage.subscribe((v) => { if (v == 'SYNC') retrievePrevAdjNow(); });
+    watches.subscribe(() => { updateTracsInCards(); });
+    tage.subscribe((v) => { if (v == 'SYNC') updateTracsInCards(); });
 });
 
 /**
- * finds and assigns the correct tracs to the tracs array. What this generates
- * is used by buildTableInfos to fill the infos array (table).
+ * finds and assigns the correct tracs to the cards array. The cards are then
+ * used directly to build the HTML.
  */
- function retrievePrevAdjNow() {
-    cards.forEach(c => c.setTrac(undefined));
+ function updateTracsInCards() {
+    leftCard.setTrac();
+    midCard.setTrac();
+    rightCard.setTrac();
+    extraCard.setTrac();
     let ts = $watches[0].tracs;
     let numSinceAdj = 0;
     for (let i = ts.length - 1; i >= 0; i--) {
@@ -89,44 +78,23 @@ onMount(() => {
     }
     if ($tage == 'RESULTS') {
         if (numSinceAdj == 1) {
-            //tracs[2] = ts[ts.length - numSinceAdj];
-            //cardInit(2, ts[ts.length - numSinceAdj], 'Now');
-            cards[2].setTrac(ts[ts.length - numSinceAdj]); // Now
+            rightCard.setTrac('Current', ts[ts.length - numSinceAdj]);
         } else if (numSinceAdj == 2) {
-            //tracs[1] = ts[ts.length - 2];
-            //tracs[2] = ts[ts.length - 1];
-            //cardInit(1, ts[ts.length - 2], 'Prev');
-            //cardInit(2, ts[ts.length - 1], 'Now');
-            cards[1].setTrac(ts[ts.length - 2]); // Prev
-            cards[2].setTrac(ts[ts.length - 1]); // Now
+            midCard.setTrac('Previous', ts[ts.length - 2]);
+            rightCard.setTrac('Current', ts[ts.length - 1]);
         } else {
-            //tracs[0] = ts[ts.length - numSinceAdj];
-            //tracs[1] = ts[ts.length - 2];
-            //tracs[2] = ts[ts.length - 1];
-            //cardInit(0, ts[ts.length - numSinceAdj], 'Old');
-            //cardInit(1, ts[ts.length - 2], 'Prev');
-            //cardInit(2, ts[ts.length - 1], 'Now');
-            cards[0].setTrac(ts[ts.length - 2]); // Prev
-            cards[1].setTrac(ts[ts.length - numSinceAdj]); // Old
-            cards[2].setTrac(ts[ts.length - 1]); // Now
-
+            midCard.setTrac('Previous', ts[ts.length - 2]);
+            leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
+            rightCard.setTrac('Current', ts[ts.length - 1], 'SLIDE', rightTwn, svgWidth, svgWidth - C.width);
         }
     } else {
         if (numSinceAdj == 1) {
-            //tracs[1] = ts[ts.length - 1];
-            //cardInit(1, ts[ts.length - 1], 'Prev');
-            cards[2].setTrac(ts[ts.length - 1]); // Now
+            rightCard.setTrac('Current', ts[ts.length - 1]);
         } else {
-            //tracs[0] = ts[ts.length - numSinceAdj];
-            //tracs[1] = ts[ts.length - 1];
-            //cardInit(0, ts[ts.length - numSinceAdj], 'Old');
-            //cardInit(1, ts[ts.length - 1], 'Prev');
-            cards[0].setTrac(ts[ts.length - 1]); // Prev
-            cards[1].setTrac(ts[ts.length - numSinceAdj]); // Old
+            midCard.setTrac('Previous', ts[ts.length - 1]);
+            leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
         }
     }
-    svgWidth--;
-    svgWidth++;
 }
 
 function startDrag(e) {
@@ -161,8 +129,8 @@ function stopDrag() { // called at the end of a finger/mouse drag
         }
         moveSpeed -= moveSpeed * 0.35;
         if (Math.abs(moveSpeed) > minSkipSpeed) {
-            twn.set(toLoc, spdToDur($twn, toLoc, Math.abs(moveSpeed))).then(() => {
-                twn.set(respawnLoc, {duration:0}).then(() => {stopDrag();});
+            midTwn.set(toLoc, spdToDur($midTwn, toLoc, Math.abs(moveSpeed))).then(() => {
+                midTwn.set(respawnLoc, {duration:0}).then(() => {stopDrag();});
             });
             return;
         } else moveSpeed = undefined;
@@ -171,7 +139,7 @@ function stopDrag() { // called at the end of a finger/mouse drag
     moving = false;
     touchLastX = undefined;
 
-    twn.set(sliderRestX, spdToDur(sliderRestX, $twn, minSkipSpeed));
+    midTwn.set(sliderRestX, spdToDur(sliderRestX, $midTwn, minSkipSpeed));
 }
 
 /**
@@ -194,10 +162,10 @@ function dragMove(e) { // called during a finger/mouse drag
     };
     ml.speed = (moveLog && moveLog.length > 0) ? ml.move / (ml.secs - moveLog[moveLog.length - 1].secs) : undefined;
 
-    $twn = ml.move + $twn;
+    $midTwn = ml.move + $midTwn;
     touchLastX = (e.targetTouches) ? e.targetTouches[0].pageX : undefined;
-    if ($twn < 0) $twn = 0;
-    else if ($twn >= svgWidth - C.width) $twn = svgWidth - C.width;
+    if ($midTwn < 0) $midTwn = 0;
+    else if ($midTwn >= svgWidth - C.width) $midTwn = svgWidth - C.width;
 
     if (!moveLog) moveLog = [];
     moveLog.push(ml);
@@ -208,11 +176,11 @@ function dragMove(e) { // called during a finger/mouse drag
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
 <div bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="230">
     <rect width="100%" height="100%" fill='lightgray'/>
-    {#each cards as card}
+<!--    {#each cards as card}{#if card.trac}
         <svg width={card.width} height={card.height} x={card.x} y='0'>
             <rect x={card.stroke / 2} y={card.stroke / 2} rx="25" ry="25" width={card.width - card.stroke}
                 height={card.height - card.stroke} stroke="black" fill="lightblue" stroke-width={card.stroke}/>
-            <text class="ch" x="50%" y="{1 + card.topMarginEm}em">{card.title}</text>
+            <text class="ch" x="50%" y="{1 + card.topMarginEm}em">{card.getTitle()}</text>
             <line x1="0" y1="2.2em" x2={card.width} y2="2.2em" stroke="black" stroke-width={card.stroke}/>
             <text class="ch" x="50%" y="{3 + card.topMarginEm}em">System</text>
             <text class="cd" x="50%" y="{4 + card.topMarginEm}em">{card.getSysDate()}</text>
@@ -224,7 +192,58 @@ function dragMove(e) { // called during a finger/mouse drag
             <text class="ch" x="50%" y="{10 + card.topMarginEm}em">Diff</text>
             <text class="cd" x="50%" y="{11 + card.topMarginEm}em">{card.getDiff()}</text>
         </svg>
-    {/each}
+    {/if}{/each}-->
+    {#if midCard.trac}
+        <svg width={midCard.width} height={midCard.height} x={midCard.x} y='0'>
+            <rect x={midCard.stroke / 2} y={midCard.stroke / 2} rx="25" ry="25" width={midCard.width - midCard.stroke}
+                height={midCard.height - midCard.stroke} stroke="black" fill="lightblue" stroke-width={midCard.stroke}/>
+            <text class="ch" x="50%" y="{1 + midCard.topMarginEm}em">{midCard.getTitle()}</text>
+            <line x1="0" y1="2.2em" x2={midCard.width} y2="2.2em" stroke="black" stroke-width={midCard.stroke}/>
+            <text class="ch" x="50%" y="{3 + midCard.topMarginEm}em">System</text>
+            <text class="cd" x="50%" y="{4 + midCard.topMarginEm}em">{midCard.getSysDate()}</text>
+            <text class="cd" x="50%" y="{5 + midCard.topMarginEm}em">{midCard.getSysTime()}</text>
+            <line x1="0" y1="6.2em" x2={midCard.width} y2="6.2em" stroke="black" stroke-width={midCard.stroke}/>
+            <text class="ch" x="50%" y="{7 + midCard.topMarginEm}em">Watch</text>
+            <text class="cd" x="50%" y="{8 + midCard.topMarginEm}em">{midCard.getWatchTime()}</text>
+            <line x1="0" y1="9.2em" x2={midCard.width} y2="9.2em" stroke="black" stroke-width={midCard.stroke}/>
+            <text class="ch" x="50%" y="{10 + midCard.topMarginEm}em">Diff</text>
+            <text class="cd" x="50%" y="{11 + midCard.topMarginEm}em">{midCard.getDiff()}</text>
+        </svg>
+    {/if}
+    {#if leftCard.trac}
+        <svg width={leftCard.width} height={leftCard.height} x={leftCard.x} y='0'>
+            <rect x={leftCard.stroke / 2} y={leftCard.stroke / 2} rx="25" ry="25" width={leftCard.width - leftCard.stroke}
+                height={leftCard.height - leftCard.stroke} stroke="black" fill="lightblue" stroke-width={leftCard.stroke}/>
+            <text class="ch" x="50%" y="{1 + leftCard.topMarginEm}em">{leftCard.getTitle()}</text>
+            <line x1="0" y1="2.2em" x2={leftCard.width} y2="2.2em" stroke="black" stroke-width={leftCard.stroke}/>
+            <text class="ch" x="50%" y="{3 + leftCard.topMarginEm}em">System</text>
+            <text class="cd" x="50%" y="{4 + leftCard.topMarginEm}em">{leftCard.getSysDate()}</text>
+            <text class="cd" x="50%" y="{5 + leftCard.topMarginEm}em">{leftCard.getSysTime()}</text>
+            <line x1="0" y1="6.2em" x2={leftCard.width} y2="6.2em" stroke="black" stroke-width={leftCard.stroke}/>
+            <text class="ch" x="50%" y="{7 + leftCard.topMarginEm}em">Watch</text>
+            <text class="cd" x="50%" y="{8 + leftCard.topMarginEm}em">{leftCard.getWatchTime()}</text>
+            <line x1="0" y1="9.2em" x2={leftCard.width} y2="9.2em" stroke="black" stroke-width={leftCard.stroke}/>
+            <text class="ch" x="50%" y="{10 + leftCard.topMarginEm}em">Diff</text>
+            <text class="cd" x="50%" y="{11 + leftCard.topMarginEm}em">{leftCard.getDiff()}</text>
+        </svg>
+    {/if}
+    {#if rightCard.trac}
+        <svg width={rightCard.width} height={rightCard.height} x={rightCard.x} y='0'>
+            <rect x={rightCard.stroke / 2} y={rightCard.stroke / 2} rx="25" ry="25" width={rightCard.width - rightCard.stroke}
+                height={rightCard.height - rightCard.stroke} stroke="black" fill="lightblue" stroke-width={rightCard.stroke}/>
+            <text class="ch" x="50%" y="{1 + rightCard.topMarginEm}em">{rightCard.getTitle()}</text>
+            <line x1="0" y1="2.2em" x2={rightCard.width} y2="2.2em" stroke="black" stroke-width={rightCard.stroke}/>
+            <text class="ch" x="50%" y="{3 + rightCard.topMarginEm}em">System</text>
+            <text class="cd" x="50%" y="{4 + rightCard.topMarginEm}em">{rightCard.getSysDate()}</text>
+            <text class="cd" x="50%" y="{5 + rightCard.topMarginEm}em">{rightCard.getSysTime()}</text>
+            <line x1="0" y1="6.2em" x2={rightCard.width} y2="6.2em" stroke="black" stroke-width={rightCard.stroke}/>
+            <text class="ch" x="50%" y="{7 + rightCard.topMarginEm}em">Watch</text>
+            <text class="cd" x="50%" y="{8 + rightCard.topMarginEm}em">{rightCard.getWatchTime()}</text>
+            <line x1="0" y1="9.2em" x2={rightCard.width} y2="9.2em" stroke="black" stroke-width={rightCard.stroke}/>
+            <text class="ch" x="50%" y="{10 + rightCard.topMarginEm}em">Diff</text>
+            <text class="cd" x="50%" y="{11 + rightCard.topMarginEm}em">{rightCard.getDiff()}</text>
+        </svg>
+    {/if}
 </svg></div>
 
 <style>
