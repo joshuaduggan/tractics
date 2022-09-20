@@ -15,6 +15,11 @@ const extraTwn = tweened(0, {duration:0});
 let moveLog = [];
 let moveSpeed;
 let mouseButtDown = false;
+let prevStage;
+let leftStack = 0;
+let rightStack = 6;
+
+const DI_RAD = 26;
 
 class Card {
     constructor() {
@@ -22,7 +27,6 @@ class Card {
         this.height = 196;
         this.stroke = 2;
         this.topMarginEm = 0.5;
-        this.x = undefined;
         this.setTrac();
     }
     setTrac(title, trac, trans, twn, transStart, transEnd) {
@@ -32,6 +36,13 @@ class Card {
             case 'SLIDE':
                 twn.set(transStart, {duration:0}).then(
                     twn.set(transEnd, spdToDur(transStart, transEnd, minSkipSpeed)));
+                break;
+            case 'SLIDE_DISAPEAR':
+                twn.set(transStart, {duration:0}).then(
+                    twn.set(transEnd, spdToDur(transStart, transEnd, minSkipSpeed)).then(() => {
+                        extraCard.trac = undefined; // obvious call to extraCard.trac required for svelte compiler to see it needs to redo SVG
+                        this.trac = this.setTrac();
+                    }));
                 break;
         }
     }
@@ -66,22 +77,25 @@ onMount(() => {
  * used directly to build the HTML.
  */
  function updateTracsInCards() {
-    leftCard.setTrac();
-    midCard.setTrac();
-    rightCard.setTrac();
-    extraCard.setTrac();
+
+    leftCard.trac = undefined; // obvious calls to reset tracs required by Svelte compiler
+    midCard.trac = undefined;
+    rightCard.trac = undefined;
+    extraCard.trac = undefined;
     let ts = $watches[0].tracs;
     let numSinceAdj = 0;
     for (let i = ts.length - 1; i >= 0; i--) {
         numSinceAdj++;
         if (ts[i].wasWatchAdj) break;
     }
+    leftStack = numSinceAdj;
+//    rightStack = 0;
     if ($tage == 'RESULTS') {
         if (numSinceAdj == 1) {
-            rightCard.setTrac('Current', ts[ts.length - numSinceAdj]);
+            rightCard.setTrac('Current', ts[ts.length - numSinceAdj], 'SLIDE', rightTwn, svgWidth, svgWidth - C.width);
         } else if (numSinceAdj == 2) {
             midCard.setTrac('Previous', ts[ts.length - 2]);
-            rightCard.setTrac('Current', ts[ts.length - 1]);
+            rightCard.setTrac('Current', ts[ts.length - 1], 'SLIDE', rightTwn, svgWidth, svgWidth - C.width);
         } else {
             midCard.setTrac('Previous', ts[ts.length - 2]);
             leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
@@ -89,12 +103,27 @@ onMount(() => {
         }
     } else {
         if (numSinceAdj == 1) {
-            rightCard.setTrac('Current', ts[ts.length - 1]);
+            if (prevStage === 'RESULTS') midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
+            else midCard.setTrac('Previous', ts[ts.length - 1]);
+        } else if (numSinceAdj == 2) {
+            if (prevStage === 'RESULTS') {
+                midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
+                leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj], 'SLIDE', leftTwn, sliderRestX, 0);
+            } else {
+                midCard.setTrac('Previous', ts[ts.length - 1]);
+                leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
+            }
         } else {
-            midCard.setTrac('Previous', ts[ts.length - 1]);
+            if (prevStage === 'RESULTS') {
+                extraCard.setTrac('Previous', ts[ts.length - 2], 'SLIDE_DISAPEAR', extraTwn, sliderRestX, 0);
+                midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
+            } else {
+                midCard.setTrac('Previous', ts[ts.length - 1]);
+            }
             leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
         }
     }
+    prevStage = $tage;
 }
 
 function startDrag(e) {
@@ -102,9 +131,14 @@ function startDrag(e) {
     mouseButtDown = true;
     moving = true;
     touchLastX = (e.targetTouches) ? e.targetTouches[0].pageX : undefined;
+    dragMove(e); // stops a "spinning" midCard immediately, otherwise movement is required.
 }
 
-function stopDrag() { // called at the end of a finger/mouse drag
+/**
+ * Called at the end of a finger/mouse drag and then call recursively by this everytime the mid 
+ * Card still has enough speed to move the card.
+ */
+function stopDrag() {
     mouseButtDown = false;
     if (!moving) return;
 
@@ -123,14 +157,19 @@ function stopDrag() { // called at the end of a finger/mouse drag
         if (moveSpeed > 0) {
             toLoc = svgWidth - C.width;
             respawnLoc = 0;
+            moveSpeed -= (leftStack > 1) ? moveSpeed * 0.35 : moveSpeed;
         } else {
             toLoc = 0;
             respawnLoc = svgWidth - C.width;
+            moveSpeed -= (rightStack > 1) ? moveSpeed * 0.35 : moveSpeed;
         }
-        moveSpeed -= moveSpeed * 0.35;
         if (Math.abs(moveSpeed) > minSkipSpeed) {
             midTwn.set(toLoc, spdToDur($midTwn, toLoc, Math.abs(moveSpeed))).then(() => {
-                midTwn.set(respawnLoc, {duration:0}).then(() => {stopDrag();});
+                midTwn.set(respawnLoc, {duration:0}).then(() => {
+                    // trac "flick" accomplished, change which trac the midCard is showing.
+                    midCard.trac = $watches[0].tracs[--leftStack];
+                    stopDrag();
+                });
             });
             return;
         } else moveSpeed = undefined;
@@ -176,23 +215,37 @@ function dragMove(e) { // called during a finger/mouse drag
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
 <div bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="230">
     <rect width="100%" height="100%" fill='lightgray'/>
-<!--    {#each cards as card}{#if card.trac}
-        <svg width={card.width} height={card.height} x={card.x} y='0'>
-            <rect x={card.stroke / 2} y={card.stroke / 2} rx="25" ry="25" width={card.width - card.stroke}
-                height={card.height - card.stroke} stroke="black" fill="lightblue" stroke-width={card.stroke}/>
-            <text class="ch" x="50%" y="{1 + card.topMarginEm}em">{card.getTitle()}</text>
-            <line x1="0" y1="2.2em" x2={card.width} y2="2.2em" stroke="black" stroke-width={card.stroke}/>
-            <text class="ch" x="50%" y="{3 + card.topMarginEm}em">System</text>
-            <text class="cd" x="50%" y="{4 + card.topMarginEm}em">{card.getSysDate()}</text>
-            <text class="cd" x="50%" y="{5 + card.topMarginEm}em">{card.getSysTime()}</text>
-            <line x1="0" y1="6.2em" x2={card.width} y2="6.2em" stroke="black" stroke-width={card.stroke}/>
-            <text class="ch" x="50%" y="{7 + card.topMarginEm}em">Watch</text>
-            <text class="cd" x="50%" y="{8 + card.topMarginEm}em">{card.getWatchTime()}</text>
-            <line x1="0" y1="9.2em" x2={card.width} y2="9.2em" stroke="black" stroke-width={card.stroke}/>
-            <text class="ch" x="50%" y="{10 + card.topMarginEm}em">Diff</text>
-            <text class="cd" x="50%" y="{11 + card.topMarginEm}em">{card.getDiff()}</text>
+    <path stroke="#999" stroke-width=3 fill="transparent" d="
+        M {(svgWidth + midCard.width) / 2} {midCard.height / 2 - DI_RAD}
+        l {DI_RAD / 4} 0 a {DI_RAD} {DI_RAD} 0 0 1 0 {DI_RAD * 2} l -{DI_RAD / 4} 0
+        M {(svgWidth + midCard.width) / 2 + DI_RAD / 1.6 - DI_RAD * 0.5} {midCard.height / 2 - DI_RAD / 1.6}
+        l {DI_RAD / 1.6} {DI_RAD / 1.6} l -{DI_RAD / 1.6} {DI_RAD / 1.6}
+        m {DI_RAD * 0.3} 0
+        l {DI_RAD / 1.6} -{DI_RAD / 1.6} l -{DI_RAD / 1.6} -{DI_RAD / 1.6}"/>
+    <path stroke="#999" stroke-width=3 fill="transparent" d="
+        M {(svgWidth - midCard.width) / 2} {midCard.height / 2 - DI_RAD}
+        l -{DI_RAD / 4} 0 a {DI_RAD} {DI_RAD} 0 0 0 0 {DI_RAD * 2} l {DI_RAD / 4} 0
+        M {(svgWidth - midCard.width) / 2 - DI_RAD / 1.6 + DI_RAD * 0.5} {midCard.height / 2 - DI_RAD / 1.6}
+        l -{DI_RAD / 1.6} {DI_RAD / 1.6} l {DI_RAD / 1.6} {DI_RAD / 1.6}
+        m -{DI_RAD * 0.3} 0
+        l -{DI_RAD / 1.6} -{DI_RAD / 1.6} l {DI_RAD / 1.6} -{DI_RAD / 1.6}"/>
+    {#if extraCard.trac}
+        <svg width={extraCard.width} height={extraCard.height} x={extraCard.x} y='0'>
+            <rect x={extraCard.stroke / 2} y={extraCard.stroke / 2} rx="25" ry="25" width={extraCard.width - extraCard.stroke}
+                height={extraCard.height - extraCard.stroke} stroke="black" fill="lightblue" stroke-width={extraCard.stroke}/>
+            <text class="ch" x="50%" y="{1 + extraCard.topMarginEm}em">{extraCard.getTitle()}</text>
+            <line x1="0" y1="2.2em" x2={extraCard.width} y2="2.2em" stroke="black" stroke-width={extraCard.stroke}/>
+            <text class="ch" x="50%" y="{3 + extraCard.topMarginEm}em">System</text>
+            <text class="cd" x="50%" y="{4 + extraCard.topMarginEm}em">{extraCard.getSysDate()}</text>
+            <text class="cd" x="50%" y="{5 + extraCard.topMarginEm}em">{extraCard.getSysTime()}</text>
+            <line x1="0" y1="6.2em" x2={extraCard.width} y2="6.2em" stroke="black" stroke-width={extraCard.stroke}/>
+            <text class="ch" x="50%" y="{7 + extraCard.topMarginEm}em">Watch</text>
+            <text class="cd" x="50%" y="{8 + extraCard.topMarginEm}em">{extraCard.getWatchTime()}</text>
+            <line x1="0" y1="9.2em" x2={extraCard.width} y2="9.2em" stroke="black" stroke-width={extraCard.stroke}/>
+            <text class="ch" x="50%" y="{10 + extraCard.topMarginEm}em">Diff</text>
+            <text class="cd" x="50%" y="{11 + extraCard.topMarginEm}em">{extraCard.getDiff()}</text>
         </svg>
-    {/if}{/each}-->
+    {/if}
     {#if midCard.trac}
         <svg width={midCard.width} height={midCard.height} x={midCard.x} y='0'>
             <rect x={midCard.stroke / 2} y={midCard.stroke / 2} rx="25" ry="25" width={midCard.width - midCard.stroke}
@@ -211,6 +264,24 @@ function dragMove(e) { // called during a finger/mouse drag
         </svg>
     {/if}
     {#if leftCard.trac}
+        <!--{#if $tage === 'RESULTS'}-->
+        {#if leftStack > 0}
+        <path d="M {(leftCard.width - 24 - 3) + 3 * Math.min(5, leftStack)} 0
+           a 26 26 0 0 1 26 26
+           l 0 {leftCard.height - 53}
+           a 26 26 0 0 1 -26 26" fill="#999"/>
+        {#each {length:Math.min(5, leftStack)} as unusued, i}
+        <path d="M {(leftCard.width - 24) + 3 * i} 0
+           a 26 26 0 0 1 26 26
+           l 0 {leftCard.height - 53}
+           a 26 26 0 0 1 -26 26" stroke="black" stroke-width="1" fill="transparent"/>
+        {/each}
+        {#if leftStack > 5}
+        <rect x={leftCard.width - 1} y=30 width=15 height=15 stroke="black" fill="#999" stroke-width=1/>
+        <text class="stack-height" x={leftCard.width + 6} y=42>{leftStack}</text>
+        {/if}
+        {/if}
+        <!--{/if}-->
         <svg width={leftCard.width} height={leftCard.height} x={leftCard.x} y='0'>
             <rect x={leftCard.stroke / 2} y={leftCard.stroke / 2} rx="25" ry="25" width={leftCard.width - leftCard.stroke}
                 height={leftCard.height - leftCard.stroke} stroke="black" fill="lightblue" stroke-width={leftCard.stroke}/>
@@ -227,6 +298,25 @@ function dragMove(e) { // called during a finger/mouse drag
             <text class="cd" x="50%" y="{11 + leftCard.topMarginEm}em">{leftCard.getDiff()}</text>
         </svg>
     {/if}
+        <!--{#if $tage === 'RESULTS'}-->
+        {#if rightStack > 0}
+        <path d="
+            M {(svgWidth - C.width + 24 + 3) - 3 * Math.min(5, rightStack)} 0
+            a 26 26 0 0 0 -26 26
+            l 0 {rightCard.height - 53}
+            a 26 26 0 0 0 26 26" fill="#999"/>
+        {#each {length:Math.min(5, rightStack)} as unusued, i}
+        <path d="M {(svgWidth - C.width + 24) - 3 * i} 0
+            a 26 26 0 0 0 -26 26
+            l 0 {rightCard.height - 53}
+            a 26 26 0 0 0 26 26" stroke="black" stroke-width="1" fill="transparent"/>
+        {/each}
+        {#if rightStack > 5}
+        <rect x={svgWidth - C.width + 1 - 15} y=30 width=15 height=15 stroke="black" fill="#999" stroke-width=1/>
+        <text class="stack-height" x={svgWidth - C.width + 8 - 15} y=42>{rightStack}</text>
+        {/if}
+        {/if}
+        <!--{/if}-->
     {#if rightCard.trac}
         <svg width={rightCard.width} height={rightCard.height} x={rightCard.x} y='0'>
             <rect x={rightCard.stroke / 2} y={rightCard.stroke / 2} rx="25" ry="25" width={rightCard.width - rightCard.stroke}
@@ -258,5 +348,8 @@ svg text {
 }
 .cd {
     font-family: 'Courier New', Courier, monospace;
+}
+.stack-height {
+    font-size: 72%;
 }
 </style>
