@@ -66,6 +66,16 @@ $: leftCard.x = $leftTwn;
 $: midCard.x = $midTwn;
 $: rightCard.x = $rightTwn;
 $: extraCard.x = $extraTwn;
+$: spdLRes = {
+    x: (sliderRestX + C.width) / 2,
+    y: C.height + 20};
+$: spdRRes = {
+    x: (sliderRestX + C.width) / 2 + sliderRestX,
+    y: C.height + 20};
+$: spdMRes = {
+    x: svgWidth / 2,
+    y: C.height + 50};
+const spdResRad = 20;
 
 onMount(() => {
     watches.subscribe(() => { updateTracsInCards(); });
@@ -213,11 +223,49 @@ function dragMove(e) { // called during a finger/mouse drag
     moveLog.push(ml);
     if (moveLog.length > 5) moveLog = moveLog.splice(moveLog.length - 5);
 }
+
+/**
+ * Returns the seconds per day rounded to one decimal place that the two tracs indicate a drift from
+ * the system time.
+ * @param at The earlier trac
+ * @param bt The later trac
+ */
+function calcSpd(at, bt) {
+    let sysTimeSpan = at.sysDate.getTime() - bt.sysDate.getTime();
+    let watchTimeSpan = at.watchDate.getTime() - bt.watchDate.getTime();
+    let millisPerSpan = sysTimeSpan - watchTimeSpan;
+    let sysDaySpan = sysTimeSpan / (1000 * 60 * 60 * 24);
+    return Math.round(millisPerSpan / sysDaySpan / 100) / 10;
+}
 </script>
     
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
-<div bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="230">
+<div bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="270">
     <rect width="100%" height="100%" fill='lightgray'/>
+    {#if leftCard.trac && midCard.trac}
+        <path stroke="#999" stroke-width=3 fill="transparent" d="
+            M {C.width / 2} {C.height}
+            Q {C.width / 2} {spdLRes.y} {spdLRes.x} {spdLRes.y}
+            T {spdMRes.x} {C.height}"/>
+        <circle cx={spdLRes.x} cy={spdLRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <text x={spdLRes.x} y={spdLRes.y + 6}>{calcSpd(leftCard.trac, midCard.trac)}</text>
+    {/if}
+    {#if midCard.trac && rightCard.trac}
+        <path stroke="#999" stroke-width=3 fill="transparent" d="
+            M {spdMRes.x} {C.height}
+            Q {spdMRes.x} {spdRRes.y} {spdRRes.x} {spdRRes.y}
+            T {svgWidth - (C.width / 2)} {C.height}"/>
+        <circle cx={spdRRes.x} cy={spdRRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <text x={spdRRes.x} y={spdRRes.y + 6}>{calcSpd(midCard.trac, rightCard.trac)}</text>
+    {/if}
+    {#if leftCard.trac && rightCard.trac}
+        <path stroke="#999" stroke-width=3 fill="transparent" d="
+            M {C.width / 2} {C.height}
+            Q {C.width / 2} {spdMRes.y} {spdMRes.x} {spdMRes.y}
+            T {svgWidth - (C.width / 2)} {C.height}"/>
+        <circle cx={spdMRes.x} cy={spdMRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <text x={spdMRes.x} y={spdMRes.y + 6}>{calcSpd(leftCard.trac, rightCard.trac)}</text>
+    {/if}
     {#if $tage === 'RESULTS'}
         {#if leftStack > 0}
             <path stroke="#999" stroke-width=3 fill="transparent" d="
