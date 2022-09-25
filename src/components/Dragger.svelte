@@ -16,6 +16,7 @@ let moveLog = [];
 let moveSpeed;
 let mouseButtDown = false;
 let prevStage;
+let maxStack = 0;
 let leftStack = 0;
 let rightStack = 0;
 
@@ -78,15 +79,31 @@ $: spdMRes = {
 const spdResRad = 20;
 
 onMount(() => {
-    watches.subscribe(() => { updateTracsInCards(); });
-    tage.subscribe((v) => { if (v == 'SYNC') updateTracsInCards(); });
+    watches.subscribe(() => { updateTracsInCards(true); });
+    tage.subscribe((v) => { if (v == 'SYNC') updateTracsInCards(false); });
 });
+
+let lastTimeCalledByWatchesChange = true;
+let oldWatch;
 
 /**
  * finds and assigns the correct tracs to the cards array. The cards are then
  * used directly to build the HTML.
  */
- function updateTracsInCards() {
+ function updateTracsInCards(calledByWatchesChange) {
+
+    //!!! WARNING This first bit is an ugly hack to prevent this from being fully run twice in
+    // immediate succession when a new watch is loaded. Because this is subscribed to both watches
+    // and tage this must be done. If watches calls this twice in a row we ignore the second call
+    // because we know there will be an immediate successive call from tage. This is because this
+    // pattern occures when a different watch is selected when this is showing results. The problem
+    // is if this pattern changes for any reason this hack will break. The reason we're doing all 
+    // this is so we can track when the watch is switched so we know NOT to make a smooth transition
+    // with the tracs !!!
+    if (calledByWatchesChange && lastTimeCalledByWatchesChange) return;
+    lastTimeCalledByWatchesChange = calledByWatchesChange;
+    let switchedWatch = oldWatch != $watches[0];
+    oldWatch = $watches[0];
 
     leftCard.trac = undefined; // obvious calls to reset tracs required by Svelte compiler
     midCard.trac = undefined;
@@ -98,7 +115,13 @@ onMount(() => {
         numSinceAdj++;
         if (ts[i].wasWatchAdj) break;
     }
-    leftStack = Math.max(numSinceAdj - (($tage == 'RESULTS') ? 3 : 2), 0); // remove one for the oldest, one for the midcard, one for the current
+    maxStack = Math.max(numSinceAdj - (($tage == 'RESULTS') ? 3 : 2), 0); // remove one for the oldest, one for the midcard, one for the current 
+    leftStack = maxStack;
+    rightStack = 0;
+
+    // ensure mobile touch on this does not scroll the screen when the cards are draggable.
+    document.getElementById('sliders').style.touchAction = ($tage == 'RESULTS' && maxStack > 1) ? 'none' : 'auto';
+    
     if ($tage == 'RESULTS') {
         if (numSinceAdj == 1) {
             rightCard.setTrac('Current', ts[ts.length - numSinceAdj], 'SLIDE', rightTwn, svgWidth, svgWidth - C.width);
@@ -112,10 +135,10 @@ onMount(() => {
         }
     } else {
         if (numSinceAdj == 1) {
-            if (prevStage === 'RESULTS') midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
+            if (prevStage === 'RESULTS' && !switchedWatch) midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
             else midCard.setTrac('Previous', ts[ts.length - 1]);
         } else if (numSinceAdj == 2) {
-            if (prevStage === 'RESULTS') {
+            if (prevStage === 'RESULTS' && !switchedWatch) {
                 midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
                 leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj], 'SLIDE', leftTwn, sliderRestX, 0);
             } else {
@@ -123,7 +146,7 @@ onMount(() => {
                 leftCard.setTrac('Oldest', ts[ts.length - numSinceAdj]);
             }
         } else {
-            if (prevStage === 'RESULTS') {
+            if (prevStage === 'RESULTS' && !switchedWatch) {
                 extraCard.setTrac('Previous', ts[ts.length - 2], 'SLIDE_DISAPEAR', extraTwn, sliderRestX, 0);
                 midCard.setTrac('Previous', ts[ts.length - 1], 'SLIDE', midTwn, svgWidth - C.width, sliderRestX);
             } else {
@@ -179,8 +202,8 @@ function stopDrag() {
                 midTwn.set(respawnLoc, {duration:0}).then(() => {
                     // trac "flick" accomplished, change which trac the midCard is showing.
                     leftStack += (moveSpeed > 0) ? -1 : 1;
-                    rightStack += (moveSpeed > 0) ? 1 : -1;
-                    midCard.trac = $watches[0].tracs[leftStack + 1];
+                    rightStack = maxStack - leftStack;
+                    midCard.trac = $watches[0].tracs[$watches[0].tracs.length - rightStack - 2];
                     stopDrag();
                 });
             });
@@ -206,7 +229,7 @@ function spdToDur(begin, end, speed) {
 }
 
 function dragMove(e) { // called during a finger/mouse drag
-    if (!moving || !mouseButtDown || $tage !== 'RESULTS' || (leftStack < 1 && rightStack < 1)) return;
+    if (!moving || !mouseButtDown || $tage !== 'RESULTS' || maxStack < 1) return;
 
     let ml = {
         secs: Date.now(),
@@ -233,15 +256,14 @@ function dragMove(e) { // called during a finger/mouse drag
 function calcSpd(at, bt) {
     let sysTimeSpan = at.sysDate.getTime() - bt.sysDate.getTime();
     let watchTimeSpan = at.watchDate.getTime() - bt.watchDate.getTime();
-    let millisPerSpan = sysTimeSpan - watchTimeSpan;
+    let millisPerSpan = watchTimeSpan - sysTimeSpan;
     let sysDaySpan = sysTimeSpan / (1000 * 60 * 60 * 24);
     return Math.round(millisPerSpan / sysDaySpan / 100) / 10;
 }
 </script>
     
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
-<div bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="270">
-    <rect width="100%" height="100%" fill='lightgray'/>
+<div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="270">
     {#if leftCard.trac && midCard.trac}
         <path stroke="#999" stroke-width=3 fill="transparent" d="
             M {C.width / 2} {C.height}
@@ -323,17 +345,17 @@ function calcSpd(at, bt) {
     {#if leftCard.trac}
         {#if leftStack > 0}
             <path d="M {(leftCard.width - 24 - 3) + 3 * Math.min(5, leftStack)} 0
-            a 26 26 0 0 1 26 26
-            l 0 {leftCard.height - 53}
-            a 26 26 0 0 1 -26 26" fill="#999"/>
+                a 26 26 0 0 1 26 26
+                l 0 {leftCard.height - 53}
+                a 26 26 0 0 1 -26 26" fill="lightgray"/>
             {#each {length:Math.min(5, leftStack)} as unusued, i}
             <path d="M {(leftCard.width - 24) + 3 * i} 0
-            a 26 26 0 0 1 26 26
-            l 0 {leftCard.height - 53}
-            a 26 26 0 0 1 -26 26" stroke="black" stroke-width="1" fill="transparent"/>
+                a 26 26 0 0 1 26 26
+                l 0 {leftCard.height - 53}
+                a 26 26 0 0 1 -26 26" stroke="#999" stroke-width="1.5" fill="transparent"/>
             {/each}
             {#if leftStack > 5}
-                <rect x={leftCard.width - 1} y=30 width=15 height=15 stroke="black" fill="#999" stroke-width=1/>
+                <rect x={leftCard.width - 1} y=30 width=15 height=15 stroke="#999" fill="lightgray" stroke-width=1/>
                 <text class="stack-height" x={leftCard.width + 6} y=42>{leftStack}</text>
             {/if}
         {/if}
@@ -358,15 +380,15 @@ function calcSpd(at, bt) {
             M {(svgWidth - C.width + 24 + 3) - 3 * Math.min(5, rightStack)} 0
             a 26 26 0 0 0 -26 26
             l 0 {rightCard.height - 53}
-            a 26 26 0 0 0 26 26" fill="#999"/>
+            a 26 26 0 0 0 26 26" fill="lightgray"/>
         {#each {length:Math.min(5, rightStack)} as unusued, i}
         <path d="M {(svgWidth - C.width + 24) - 3 * i} 0
             a 26 26 0 0 0 -26 26
             l 0 {rightCard.height - 53}
-            a 26 26 0 0 0 26 26" stroke="black" stroke-width="1" fill="transparent"/>
+            a 26 26 0 0 0 26 26" stroke="#999" stroke-width="1.5" fill="transparent"/>
         {/each}
         {#if rightStack > 5}
-            <rect x={svgWidth - C.width + 1 - 15} y=30 width=15 height=15 stroke="black" fill="#999" stroke-width=1/>
+            <rect x={svgWidth - C.width + 1 - 15} y=30 width=15 height=15 stroke="#999" fill="lightgray" stroke-width=1/>
             <text class="stack-height" x={svgWidth - C.width + 8 - 15} y=42>{rightStack}</text>
         {/if}
     {/if}

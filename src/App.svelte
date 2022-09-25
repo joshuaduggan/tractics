@@ -79,7 +79,7 @@ function wasWatchAdjusted(wasIt) {
 <WatchSelect/><br/>
 <Clock bind:offset bind:clockTime/>
 <Dragger/>
-<ResTable/>
+<!--<ResTable/>-->
 </div>
 <br/>
 {#if $tage == 'SYNC'}
