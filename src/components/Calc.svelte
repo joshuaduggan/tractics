@@ -1,10 +1,12 @@
 <script>
 import { watches, tage } from '../tracmanager.js';
 
+
+//???!!! not sure how this interacts with the setting in calcAccuracy, may be superflous? !!!???
 $: trac = $watches[0].tracs.at(-1);
 
 /**
- * 
+ * ???!!! The method that actually set's a trac's props? must be double checked and doc'd !!!???
  * @param t The Trac not yet included in the Watch
  */
 export function calcAccuracy(t) {

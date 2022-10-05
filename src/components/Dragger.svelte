@@ -99,8 +99,9 @@ let oldWatch;
     // pattern occures when a different watch is selected when this is showing results. The problem
     // is if this pattern changes for any reason this hack will break. The reason we're doing all 
     // this is so we can track when the watch is switched so we know NOT to make a smooth transition
-    // with the tracs !!!
-    if (calledByWatchesChange && lastTimeCalledByWatchesChange) return;
+    // with the tracs - as further hackery; checks to see if there is only 1 trac which will be the
+    // case if this is a new watch going into results !!!
+    if (calledByWatchesChange && lastTimeCalledByWatchesChange && ($watches[0].tracs.length != 1)) return;
     lastTimeCalledByWatchesChange = calledByWatchesChange;
     let switchedWatch = oldWatch != $watches[0];
     oldWatch = $watches[0];
@@ -261,9 +262,17 @@ function calcSpd(at, bt) {
     return Math.round(millisPerSpan / sysDaySpan / 100) / 10;
 }
 </script>
-    
+
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
+
 <div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="270">
+    <defs>
+        <rect id='stackPlace' rx="25" ry="25" width={C.width} height={C.height} fill="#999"/>
+    </defs>
+    <use x={0} y='0' href='#stackPlace'/>
+    <use x={(svgWidth - C.width) / 2} y='0' href='#stackPlace'/>
+    <use x={svgWidth - C.width} y='0' href='#stackPlace'/>
+
     {#if leftCard.trac && midCard.trac}
         <path stroke="#999" stroke-width=3 fill="transparent" d="
             M {C.width / 2} {C.height}

@@ -81,7 +81,6 @@ function wasWatchAdjusted(wasIt) {
 <Dragger/>
 <!--<ResTable/>-->
 </div>
-<br/>
 {#if $tage == 'SYNC'}
 <div>
 	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync</button></div>
@@ -114,7 +113,6 @@ function wasWatchAdjusted(wasIt) {
 <div align="center"><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Restart Process</button></div>
 {/if}
 <Calc bind:this={calc}/>
-
 </main>
 
 <style>
