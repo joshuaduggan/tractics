@@ -68,6 +68,14 @@ function csvWatch() {
  * selected list
  */
 function selected() {
+    // !!! a bit of a hack to ensure that the upcoming change to watches will not
+    // allow Dragger.updateTracsInCards to fully run unless we are in the SYNC
+    // $tage. If we are not in the SYNC $tage we will be at the end of this method
+    // and that will trigger a Dragger.updateTracsInCards full run. We only want
+    // one run of that method because tween motion is messed up if it's called
+    // twice in immediate succession. !!!
+    tage.skip_upadateTracsInCards = $tage != 'SYNC';
+
     if (Number.parseInt(selectedId)) {
         // move the selected watch to the front of the array
         tm.moveWatch(selectedId);

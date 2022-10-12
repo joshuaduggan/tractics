@@ -79,32 +79,26 @@ $: spdMRes = {
 const spdResRad = 20;
 
 onMount(() => {
-    watches.subscribe(() => { updateTracsInCards(true); });
-    tage.subscribe((v) => { if (v == 'SYNC') updateTracsInCards(false); });
+    // Run whenever a trac is added or the watch order/number is changed..
+    watches.subscribe(() => { updateTracsInCards(); });
+    // Run whenever tage changes to SYNC.
+    tage.subscribe((v) => { if (v === 'SYNC') updateTracsInCards(); });
 });
 
-let lastTimeCalledByWatchesChange = true;
-let oldWatch;
-
+let updateTracsInCards_oldWatch;
 /**
  * finds and assigns the correct tracs to the cards array. The cards are then
  * used directly to build the HTML.
  */
- function updateTracsInCards(calledByWatchesChange) {
+ function updateTracsInCards() {
+    // !!! a bit of a hack set in WatchSelect.selected - see there for more !!!
+    if (tage.skip_upadateTracsInCards) {
+        tage.skip_upadateTracsInCards = false;
+        return;
+    }
 
-    //!!! WARNING This first bit is an ugly hack to prevent this from being fully run twice in
-    // immediate succession when a new watch is loaded. Because this is subscribed to both watches
-    // and tage this must be done. If watches calls this twice in a row we ignore the second call
-    // because we know there will be an immediate successive call from tage. This is because this
-    // pattern occures when a different watch is selected when this is showing results. The problem
-    // is if this pattern changes for any reason this hack will break. The reason we're doing all 
-    // this is so we can track when the watch is switched so we know NOT to make a smooth transition
-    // with the tracs - as further hackery; checks to see if there is only 1 trac which will be the
-    // case if this is a new watch going into results !!!
-    if (calledByWatchesChange && lastTimeCalledByWatchesChange && ($watches[0].tracs.length != 1)) return;
-    lastTimeCalledByWatchesChange = calledByWatchesChange;
-    let switchedWatch = oldWatch != $watches[0];
-    oldWatch = $watches[0];
+    let switchedWatch = updateTracsInCards_oldWatch != $watches[0];
+    updateTracsInCards_oldWatch = $watches[0];
 
     leftCard.trac = undefined; // obvious calls to reset tracs required by Svelte compiler
     midCard.trac = undefined;
