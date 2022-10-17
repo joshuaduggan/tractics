@@ -117,6 +117,7 @@ function wasWatchAdjusted(wasIt) {
 
 <style>
 p {
+	margin-top: 0;
 	padding-left: 6%;
 	padding-right: 6%;
 }

@@ -67,15 +67,20 @@ $: leftCard.x = $leftTwn;
 $: midCard.x = $midTwn;
 $: rightCard.x = $rightTwn;
 $: extraCard.x = $extraTwn;
+$: spdBase = {
+    x: 0,
+    y: C.height + 10,
+    width: svgWidth,
+    height: 90};
 $: spdLRes = {
     x: (sliderRestX + C.width) / 2,
-    y: C.height + 20};
+    y: spdBase.y + spdBase.height / 3 - 2};
 $: spdRRes = {
     x: (sliderRestX + C.width) / 2 + sliderRestX,
-    y: C.height + 20};
+    y: spdBase.y + spdBase.height / 3 - 2};
 $: spdMRes = {
-    x: svgWidth / 2,
-    y: C.height + 50};
+    x: spdBase.x + spdBase.width / 2,
+    y: spdBase.y + (spdBase.height / 3) * 2 + 2};
 const spdResRad = 20;
 
 onMount(() => {
@@ -115,7 +120,7 @@ let updateTracsInCards_oldWatch;
     rightStack = 0;
 
     // ensure mobile touch on this does not scroll the screen when the cards are draggable.
-    document.getElementById('sliders').style.touchAction = ($tage == 'RESULTS' && maxStack > 1) ? 'none' : 'auto';
+    document.getElementById('sliders').style.touchAction = ($tage == 'RESULTS' && maxStack > 0) ? 'none' : 'auto';
     
     if ($tage == 'RESULTS') {
         if (numSinceAdj == 1) {
@@ -259,20 +264,27 @@ function calcSpd(at, bt) {
 
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
 
-<div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="270">
-    <defs>
-        <rect id='stackPlace' rx="25" ry="25" width={C.width} height={C.height} fill="#999"/>
-    </defs>
-    <use x={0} y='0' href='#stackPlace'/>
-    <use x={(svgWidth - C.width) / 2} y='0' href='#stackPlace'/>
-    <use x={svgWidth - C.width} y='0' href='#stackPlace'/>
+<div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="296">
+    <!-- The card stack bases -->
+    <defs><g id='stackBase'>
+        <rect rx="25" ry="25" width={C.width} height={C.height} fill="#DDD"/>
+        <text x="{C.width/2 + 14}" y="{C.height/2}">Watch Sync</text>
+        <text x="{C.width/2 - 10}" y="{C.height/2}">Snapshot</text>
+    </g></defs>
+    <use x={0} y='0' href='#stackBase'/>
+    <use x={(svgWidth - C.width) / 2} y='0' href='#stackBase'/>
+    <use x={svgWidth - C.width} y='0' href='#stackBase'/>
+
+    <!-- The SPD results area -->
+    <rect rx="25" ry="25" x={spdBase.x} y={spdBase.y} width={spdBase.width} height={spdBase.height} fill="#DDD"/>
+    <text class="spdBaseText" x={spdBase.x + spdBase.width / 2} y={spdBase.y + spdBase.height / 2 + 10}>Watch Drift In SPD</text>
 
     {#if leftCard.trac && midCard.trac}
         <path stroke="#999" stroke-width=3 fill="transparent" d="
             M {C.width / 2} {C.height}
             Q {C.width / 2} {spdLRes.y} {spdLRes.x} {spdLRes.y}
             T {spdMRes.x} {C.height}"/>
-        <circle cx={spdLRes.x} cy={spdLRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <circle cx={spdLRes.x} cy={spdLRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightblue"/>
         <text x={spdLRes.x} y={spdLRes.y + 6}>{calcSpd(leftCard.trac, midCard.trac)}</text>
     {/if}
     {#if midCard.trac && rightCard.trac}
@@ -280,7 +292,7 @@ function calcSpd(at, bt) {
             M {spdMRes.x} {C.height}
             Q {spdMRes.x} {spdRRes.y} {spdRRes.x} {spdRRes.y}
             T {svgWidth - (C.width / 2)} {C.height}"/>
-        <circle cx={spdRRes.x} cy={spdRRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <circle cx={spdRRes.x} cy={spdRRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightblue"/>
         <text x={spdRRes.x} y={spdRRes.y + 6}>{calcSpd(midCard.trac, rightCard.trac)}</text>
     {/if}
     {#if leftCard.trac && rightCard.trac}
@@ -288,7 +300,7 @@ function calcSpd(at, bt) {
             M {C.width / 2} {C.height}
             Q {C.width / 2} {spdMRes.y} {spdMRes.x} {spdMRes.y}
             T {svgWidth - (C.width / 2)} {C.height}"/>
-        <circle cx={spdMRes.x} cy={spdMRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightgray"/>
+        <circle cx={spdMRes.x} cy={spdMRes.y} r={spdResRad} stroke="#999" stroke-width=3 fill="lightblue"/>
         <text x={spdMRes.x} y={spdMRes.y + 6}>{calcSpd(leftCard.trac, rightCard.trac)}</text>
     {/if}
     {#if $tage === 'RESULTS'}
@@ -350,7 +362,7 @@ function calcSpd(at, bt) {
             <path d="M {(leftCard.width - 24 - 3) + 3 * Math.min(5, leftStack)} 0
                 a 26 26 0 0 1 26 26
                 l 0 {leftCard.height - 53}
-                a 26 26 0 0 1 -26 26" fill="lightgray"/>
+                a 26 26 0 0 1 -26 26" fill="#DDD"/>
             {#each {length:Math.min(5, leftStack)} as unusued, i}
             <path d="M {(leftCard.width - 24) + 3 * i} 0
                 a 26 26 0 0 1 26 26
@@ -358,7 +370,7 @@ function calcSpd(at, bt) {
                 a 26 26 0 0 1 -26 26" stroke="#999" stroke-width="1.5" fill="transparent"/>
             {/each}
             {#if leftStack > 5}
-                <rect x={leftCard.width - 1} y=30 width=15 height=15 stroke="#999" fill="lightgray" stroke-width=1/>
+                <rect x={leftCard.width - 1} y=30 width=15 height=15 stroke="#999" fill="#DDD" stroke-width=1/>
                 <text class="stack-height" x={leftCard.width + 6} y=42>{leftStack}</text>
             {/if}
         {/if}
@@ -383,7 +395,7 @@ function calcSpd(at, bt) {
             M {(svgWidth - C.width + 24 + 3) - 3 * Math.min(5, rightStack)} 0
             a 26 26 0 0 0 -26 26
             l 0 {rightCard.height - 53}
-            a 26 26 0 0 0 26 26" fill="lightgray"/>
+            a 26 26 0 0 0 26 26" fill="#DDD"/>
         {#each {length:Math.min(5, rightStack)} as unusued, i}
         <path d="M {(svgWidth - C.width + 24) - 3 * i} 0
             a 26 26 0 0 0 -26 26
@@ -391,7 +403,7 @@ function calcSpd(at, bt) {
             a 26 26 0 0 0 26 26" stroke="#999" stroke-width="1.5" fill="transparent"/>
         {/each}
         {#if rightStack > 5}
-            <rect x={svgWidth - C.width + 1 - 15} y=30 width=15 height=15 stroke="#999" fill="lightgray" stroke-width=1/>
+            <rect x={svgWidth - C.width + 1 - 15} y=30 width=15 height=15 stroke="#999" fill="#DDD" stroke-width=1/>
             <text class="stack-height" x={svgWidth - C.width + 8 - 15} y=42>{rightStack}</text>
         {/if}
     {/if}
@@ -429,5 +441,16 @@ svg text {
 }
 .stack-height {
     font-size: 72%;
+}
+#stackBase text {
+    writing-mode: tb;
+    font-weight: bold;
+    font-size: x-large;
+    fill: #BBB;
+}
+.spdBaseText {
+    font-weight: bold;
+    font-size: xx-large;
+    fill: #BBB;
 }
 </style>

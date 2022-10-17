@@ -55,7 +55,8 @@ export function calcAccuracy(t) {
 .spdres {
     background-color: yellow;
 }
-div {
+p {
+    margin-top: 0;
     padding-left: 6%;
     padding-right: 6%;
 }
