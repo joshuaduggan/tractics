@@ -3,7 +3,6 @@ import * as tm from './tracmanager.js';
 import { tage } from './tracmanager.js';
 import WatchSelect from './components/WatchSelect.svelte';
 import Dragger from './components/Dragger.svelte';
-import ResTable from './components/ResTable.svelte';
 import Clock from './components/Clock.svelte';
 import Calc from './components/Calc.svelte';
 //import ResChart from './components/ResChart.svelte';
@@ -76,11 +75,16 @@ function wasWatchAdjusted(wasIt) {
 
 <main>
 <div align='center'>
-<WatchSelect/><br/>
-<Clock bind:offset bind:clockTime/>
-<Dragger/>
-<!--<ResTable/>-->
+	<WatchSelect/><br/>
+	<Clock bind:offset bind:clockTime/>
+	<div class="butt-col" align="center">
+		<button class='basic-butt' on:click={retard15}>- 15</button>
+		<button class='basic-butt' on:click={advance15}>+ 15</button>
+		<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
+		<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
+	</div>
 </div>
+<Dragger/>
 {#if $tage == 'SYNC'}
 <div>
 	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync</button></div>
@@ -91,7 +95,7 @@ function wasWatchAdjusted(wasIt) {
 {:else if $tage == 'ALTER'}
 <div>
 	<div align="center">
-	<button class='basic-butt' on:click={retard15}>- 15</button>
+	<button class='basic-butt' on:click={retard15}>- 15</button><br/>
 	<button class='basic-butt' on:click={advance15}>+ 15</button><br/>
 	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
 	<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
@@ -116,12 +120,26 @@ function wasWatchAdjusted(wasIt) {
 </main>
 
 <style>
+main {
+	min-width: 340px;
+	max-width: 440px;
+	margin: auto;
+}
+/*Clock {
+	float:left;
+}*/
+.butt-col {
+	float: right;
+	/*vertical-align: middle;*/
+	display: inline-grid;
+}
+.basic-butt {
+	min-width: 30%;
+	/*display: block;*/
+}
 p {
 	margin-top: 0;
 	padding-left: 6%;
 	padding-right: 6%;
-}
-.basic-butt {
-	min-width: 30%;
 }
 </style>

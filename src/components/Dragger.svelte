@@ -6,7 +6,7 @@ import { watches, tage } from '../tracmanager.js';
 let moving = false;
 let touchLastX;
 const minSkipSpeed = 0.5;
-let svgWidth = 300;
+let svgWidth = 0;
 let sliderRestX;
 const leftTwn = tweened(0, {duration:0});
 const midTwn = tweened(0, {duration:0});
@@ -264,7 +264,7 @@ function calcSpd(at, bt) {
 
 <svelte:window on:mouseup={stopDrag} on:touchend={stopDrag} on:touchcancel={stopDrag} on:mousemove={dragMove} on:touchmove={dragMove}/>
 
-<div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} width=100% height="296">
+<div id="sliders" bind:clientWidth={svgWidth}><svg on:mousedown={startDrag} on:touchstart={startDrag} height="296">
     <!-- The card stack bases -->
     <defs><g id='stackBase'>
         <rect rx="25" ry="25" width={C.width} height={C.height} fill="#DDD"/>
@@ -428,7 +428,10 @@ function calcSpd(at, bt) {
 
 <style>
 svg {
+    width: 100%;
     user-select: none;
+}
+#sliders {
 }
 svg text {
     text-anchor: middle;
