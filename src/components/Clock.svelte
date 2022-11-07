@@ -107,6 +107,8 @@ function updateClockTime() {
 	svg {
 		max-width: 200px;
 		max-height: 200px;
+		margin: auto;
+		display: block;
 		/*width: 100%;
 		height: 100%;*/
 	}

@@ -74,47 +74,33 @@ function wasWatchAdjusted(wasIt) {
 </script>
 
 <main>
-<div align='center'>
-	<WatchSelect/><br/>
-	<Clock bind:offset bind:clockTime/>
-	<div class="butt-col" align="center">
-		<button class='basic-butt' on:click={retard15}>- 15</button>
-		<button class='basic-butt' on:click={advance15}>+ 15</button>
-		<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
-		<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
-	</div>
+<div id='top_manip'>
+	<div id="ws-div"><WatchSelect/></div>
+	<div id="clock-div"><Clock bind:offset bind:clockTime/></div>
+	{#if $tage == 'SYNC'}
+	<button class='b-single' on:click={syncTime}>Sync</button>
+	{:else if $tage == 'ALTER'}
+	<button class='b-one' on:click={advance15}>+ 15</button>
+	<button class='b-two' on:click={retard15}>- 15</button>
+	<button class='b-three' on:click={confirmWatchIndicated}>Good Match</button>
+	<button class='b-four' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
+	{:else if $tage == 'ADJUSTED'}
+	<button class='b-two' on:click={() => wasWatchAdjusted(true)}>Yes</button>
+	<button class='b-three' on:click={() => wasWatchAdjusted(false)}>No</button>
+	{:else if $tage == 'RESULTS'}
+	<button class='b-single' on:click={() => { $tage = 'SYNC'; }}>Restart Process</button>
+	{/if}
 </div>
 <Dragger/>
 {#if $tage == 'SYNC'}
-<div>
-	<div align="center"><button class='basic-butt' on:click={syncTime}>Sync</button></div>
-	<p>Press 'Sync' when your watch's seconds hand reads 00, 15, 30, or 45.
-		Doing so will let this app know what time your watch is indicating.
-	</p>
-</div>
+<p>Press 'Sync' when your watch's seconds hand reads 00, 15, 30, or 45.
+		Doing so will let this app know what time your watch is indicating.</p>
 {:else if $tage == 'ALTER'}
-<div>
-	<div align="center">
-	<button class='basic-butt' on:click={retard15}>- 15</button><br/>
-	<button class='basic-butt' on:click={advance15}>+ 15</button><br/>
-	<button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Start Over</button>
-	<button class='basic-butt' on:click={confirmWatchIndicated}>Good Match</button>
-	</div>
-	<p>Does the app clock match the time on your watch? Adjust the clock as
+<p>Does the app clock match the time on your watch? Adjust the clock as
 		needed with the + or - 15 second increment buttons.</p>
-</div>
 {:else if $tage == 'ADJUSTED'}
-<div>
-	<div align="center">
-		<button class='basic-butt' on:click={() => wasWatchAdjusted(true)}>Yes</button>
-		<button class='basic-butt' on:click={() => wasWatchAdjusted(false)}>No</button>
-	</div>
-	<p>Has the watch been adjusted or has it's timekeeping otherwise been
+<p>Has the watch been adjusted or has it's timekeeping otherwise been
 		interrupted since last synced with this app?</p>
-</div>
-{/if}
-{#if $tage == 'RESULTS'}
-<div align="center"><button class='basic-butt' on:click={() => { $tage = 'SYNC'; }}>Restart Process</button></div>
 {/if}
 <Calc bind:this={calc}/>
 </main>
@@ -125,21 +111,43 @@ main {
 	max-width: 440px;
 	margin: auto;
 }
-/*Clock {
-	float:left;
-}*/
-.butt-col {
-	float: right;
-	/*vertical-align: middle;*/
-	display: inline-grid;
+#top_manip {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
 }
-.basic-butt {
-	min-width: 30%;
-	/*display: block;*/
+#ws-div {
+/*	width: 100%;*/
+	grid-column: 1 / 3;
+	margin-left: 10%;
+	margin-right: 10%;
+}
+#clock-div {
+	grid-column: 1 / 2;
+	grid-row: 2 / 6;
+}
+.b-single {
+	grid-column: 2;
+	grid-row: 3 / 5;
+}
+.b-one {
+	grid-column: 2;
+	grid-row: 2;
+}
+.b-two {
+	grid-column: 2;
+	grid-row: 3;
+}
+.b-three {
+	grid-column: 2;
+	grid-row: 4;
+}
+.b-four {
+	grid-column: 2;
+	grid-row: 5;
 }
 p {
 	margin-top: 0;
-	padding-left: 6%;
-	padding-right: 6%;
+	padding-left: 2%;
+	padding-right: 2%;
 }
 </style>

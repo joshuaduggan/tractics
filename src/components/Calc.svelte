@@ -34,7 +34,7 @@ export function calcAccuracy(t) {
     trac = t;
 }
 </script>
-<div>
+
 <p>
 {#if $tage == 'RESULTS'}
     Your watch is now <strong>{trac.secondsOff} seconds</strong> from system time.
@@ -50,14 +50,13 @@ export function calcAccuracy(t) {
 {/if}
 </p>
 
-</div>
 <style>
 .spdres {
     background-color: yellow;
 }
 p {
     margin-top: 0;
-    padding-left: 6%;
-    padding-right: 6%;
+    padding-left: 2%;
+    padding-right: 2%;
 }
 </style>

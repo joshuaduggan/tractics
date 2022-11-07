@@ -118,6 +118,6 @@ function selected() {
 
 <style>
 select {
-    width: 80%;
+    width: 100%;
 }
 </style>

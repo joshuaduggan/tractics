@@ -5,7 +5,7 @@ import { watches, tage } from '../tracmanager.js';
 
 let moving = false;
 let touchLastX;
-const minSkipSpeed = 0.5;
+const minSkipSpeed = 0.3;
 let svgWidth = 0;
 let sliderRestX;
 const leftTwn = tweened(0, {duration:0});
