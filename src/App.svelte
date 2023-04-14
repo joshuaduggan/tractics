@@ -95,6 +95,9 @@ function wasWatchAdjusted(wasIt) {
 {#if $tage == 'SYNC'}
 <p>Press 'Sync' when your watch's seconds hand reads 00, 15, 30, or 45.
 		Doing so will let this app know what time your watch is indicating.</p>
+		<p><strong>Note:</strong> The more time between two sync snapshots the
+		better. Anything less than 6 hours should be considered innacurate. 24
+		hours or more is ideal.</p>
 {:else if $tage == 'ALTER'}
 <p>Does the app clock match the time on your watch? Adjust the clock as
 		needed with the + or - 15 second increment buttons.</p>
