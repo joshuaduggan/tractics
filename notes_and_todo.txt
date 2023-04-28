@@ -1,0 +1,15 @@
+Github Pages is tricky - My current imperfect understanding:
+    I use gh-pages which is a node module which can be run from npm to make github update your specified pages site with the current repo state. You want to disable Jeykyll which by default creates a root index.html from the readme.md, you do this by including a ".nojeykyll" file in your project's root. Then I use an index.html file that redirects to ./public to move people to that directory. "public" is the default root output directory of builds.
+    "npm run deploy" is the command to get gh-pages to do it's magic. You will need to have a personal access token active for it to access github.
+
+Profit
+
+Results table behavior
+Oldest: If watch is selected that has more than 1 entry after latest adjustment
+this will display the oldest post adjusted record
+Prev: If watch is selected that has 1 entry after latest adjustment
+this will display the most recent record
+Now: As soon as "good sync" is selected this will populate with the current
+record
+Therefore the first 2 columns of ResTable will have to be updated when a watch
+is selected and the 3rd column (and spd of the first 2) when a sync is confirmed
